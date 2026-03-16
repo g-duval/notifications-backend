@@ -69,6 +69,8 @@ public class AuthenticationLoader {
 
         if (sourcesSecretResponse.password != null && !sourcesSecretResponse.password.isBlank()) {
             Log.debug("Found a secret password in the response from Sources");
+        } else {
+            throw new IllegalStateException("Invalid secret: password is missing");
         }
 
         return Optional.of(new AuthenticationResult(sourcesSecretResponse, secretRequest.authenticationType));

@@ -58,7 +58,7 @@ public interface SourcesPskClient {
      */
     @ClientExceptionMapper
     static RuntimeException toException(final Response response) {
-        final var errMessage = String.format("Sources responded with a %s status: %s", response.getStatus(), response.readEntity(String.class));
+        final var errMessage = String.format("Sources responded with a %s status", response.getStatus());
 
         return new WebApplicationException(errMessage, response);
     }
