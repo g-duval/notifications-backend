@@ -148,7 +148,7 @@ public abstract class BaseConnectorIntegrationTest {
         if (expectedTargetUrl != null) {
             assertEquals(expectedTargetUrl, details.getString("target"));
         }
-        if (expectedTargetUrl != null) {
+        if (statusCode != null) {
             assertEquals(statusCode, details.getInteger("http_status_code"));
         }
     }

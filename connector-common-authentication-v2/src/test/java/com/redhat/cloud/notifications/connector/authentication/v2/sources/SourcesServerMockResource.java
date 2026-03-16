@@ -56,7 +56,6 @@ public class SourcesServerMockResource implements QuarkusTestResourceLifecycleMa
         // Priority 2 (lower priority) acts as catch-all for requests without proper auth
         wireMockServer.stubFor(get(urlMatching("/internal/v2.0/secrets/[0-9]+"))
             .atPriority(2)
-            .withHeader("x-rh-sources-org-id", matching(".*"))
             .willReturn(aResponse()
                 .withStatus(401)
                 .withHeader("Content-Type", "application/json")

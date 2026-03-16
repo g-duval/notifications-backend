@@ -52,16 +52,17 @@ public class AuthenticationLoader {
 
         Timer.Sample timer = Timer.start(meterRegistry);
         SourcesSecretResponse sourcesSecretResponse;
-
-        if (connectorConfig.isSourcesOidcAuthEnabled(orgId)) {
-            Log.debug("Using OIDC Sources client");
-            sourcesSecretResponse = sourcesOidcClient.getById(orgId, secretRequest.secretId);
-        } else {
-            Log.debug("Using PSK Sources client");
-            sourcesSecretResponse = sourcesPskClient.getById(orgId, sourcesApiPsk, secretRequest.secretId);
+        try {
+            if (connectorConfig.isSourcesOidcAuthEnabled(orgId)) {
+                Log.debug("Using OIDC Sources client");
+                sourcesSecretResponse = sourcesOidcClient.getById(orgId, secretRequest.secretId);
+            } else {
+                Log.debug("Using PSK Sources client");
+                sourcesSecretResponse = sourcesPskClient.getById(orgId, sourcesApiPsk, secretRequest.secretId);
+            }
+        } finally {
+            timer.stop(meterRegistry.timer(SOURCES_TIMER));
         }
-        timer.stop(meterRegistry.timer(SOURCES_TIMER));
-
         if (sourcesSecretResponse.username != null && !sourcesSecretResponse.username.isBlank()) {
             Log.debug("Found a secret username in the response from Sources");
         }
@@ -69,7 +70,9 @@ public class AuthenticationLoader {
         if (sourcesSecretResponse.password != null && !sourcesSecretResponse.password.isBlank()) {
             Log.debug("Found a secret password in the response from Sources");
         }
+
         return Optional.of(new AuthenticationResult(sourcesSecretResponse, secretRequest.authenticationType));
+
     }
 
     static void validate(AuthenticationRequest secretRequest) {
