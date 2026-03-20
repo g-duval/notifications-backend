@@ -55,6 +55,8 @@ public class WebhookMessageHandler extends MessageHandler {
                 try (Response response = webhookRestClient.postWithInsightToken(insightToken, notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {
                     handledMessageDetails.httpStatus = response.getStatus();
                 }
+            } else {
+                throw new RuntimeException("Unsupported authentication type: " + authenticationResultOptional.get().authenticationType);
             }
         } else {
             try (Response response = webhookRestClient.post(notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {

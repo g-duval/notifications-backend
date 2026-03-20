@@ -3,6 +3,8 @@ package com.redhat.cloud.notifications.connector.webhook;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationLoader;
+import com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationResult;
 import com.redhat.cloud.notifications.connector.authentication.v2.sources.SourcesPskClient;
 import com.redhat.cloud.notifications.connector.authentication.v2.sources.SourcesSecretResponse;
 import com.redhat.cloud.notifications.connector.v2.TestLifecycleManager;
@@ -11,20 +13,27 @@ import com.redhat.cloud.notifications.connector.v2.http.models.NotificationToCon
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
+import io.smallrye.reactive.messaging.ce.IncomingCloudEventMetadata;
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+import java.util.Optional;
 
 import static com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationType.BEARER;
 import static com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationType.SECRET_TOKEN;
 import static com.redhat.cloud.notifications.connector.webhook.WebhookMessageHandler.X_INSIGHT_TOKEN_HEADER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.wildfly.common.Assert.assertFalse;
 
@@ -34,6 +43,12 @@ class WebhookConnectorIntegrationTest extends BaseHttpConnectorIntegrationTest {
 
     @Inject
     ObjectMapper objectMapper;
+
+    @Inject
+    WebhookMessageHandler webhookMessageHandler;
+
+    @InjectSpy
+    AuthenticationLoader authenticationLoader;
 
     @Override
     protected String getRemoteServerPath() {
@@ -121,6 +136,33 @@ class WebhookConnectorIntegrationTest extends BaseHttpConnectorIntegrationTest {
         } finally {
             addBearerToken = false;
         }
+    }
+
+    @Test
+    void testUnsupportedAuthenticationType() {
+        // Create a mock AuthenticationResult with null authenticationType to simulate an edge case
+        AuthenticationResult mockResult = mock(AuthenticationResult.class);
+        mockResult.username = "test_user";
+        mockResult.password = "test_password";
+        mockResult.authenticationType = null;
+
+        when(authenticationLoader.fetchAuthenticationData(anyString(), any())).thenReturn(Optional.of(mockResult));
+
+        // Create test data
+        JsonObject payload = new JsonObject()
+            .put("org_id", "12345")
+            .put("endpoint_properties", new JsonObject().put("url", "http://example.com"))
+            .put("payload", new JsonObject().put("test", "data"));
+
+        IncomingCloudEventMetadata<JsonObject> mockMetadata = mock(IncomingCloudEventMetadata.class);
+        when(mockMetadata.getData()).thenReturn(payload);
+
+        // Execute and verify exception is thrown
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            webhookMessageHandler.handle(mockMetadata);
+        });
+
+        assertEquals("Unsupported authentication type: null", exception.getMessage());
     }
 
     @Override

@@ -1,7 +1,9 @@
 package com.redhat.cloud.notifications.connector.authentication.v2;
 
+import com.redhat.cloud.notifications.connector.authentication.v2.sources.SourcesOidcClient;
 import com.redhat.cloud.notifications.connector.authentication.v2.sources.SourcesPskClient;
 import com.redhat.cloud.notifications.connector.authentication.v2.sources.SourcesSecretResponse;
+import com.redhat.cloud.notifications.connector.v2.ConnectorConfig;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
@@ -31,6 +33,13 @@ public class AuthenticationLoaderTest {
     @InjectMock
     @RestClient
     SourcesPskClient sourcesClient;
+
+    @InjectMock
+    @RestClient
+    SourcesOidcClient sourcesOidcClient;
+
+    @InjectMock
+    ConnectorConfig connectorConfig;
 
     @Test
     void testNoSecretId() {
@@ -74,6 +83,79 @@ public class AuthenticationLoaderTest {
         IllegalStateException e = assertThrows(IllegalStateException.class, () ->
             secretsLoader.fetchAuthenticationData("",  buildAuthentication("SECRET_TOKEN", null)));
         assertEquals("Invalid payload: the secret ID is missing", e.getMessage());
+    }
+
+    @Test
+    void testBlankPassword() {
+        SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
+        sourcesSecret.username = "john_doe";
+        sourcesSecret.password = "  ";
+        when(sourcesClient.getById(anyString(), anyString(), eq(123L))).thenReturn(sourcesSecret);
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, () ->
+            secretsLoader.fetchAuthenticationData("default_org", buildAuthentication(AuthenticationType.SECRET_TOKEN.name(), 123L)));
+
+        assertEquals("Invalid secret: password is missing", e.getMessage());
+    }
+
+    @Test
+    void testNullPassword() {
+        SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
+        sourcesSecret.username = "john_doe";
+        sourcesSecret.password = null;
+        when(sourcesClient.getById(anyString(), anyString(), eq(123L))).thenReturn(sourcesSecret);
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, () ->
+            secretsLoader.fetchAuthenticationData("default_org", buildAuthentication(AuthenticationType.SECRET_TOKEN.name(), 123L)));
+
+        assertEquals("Invalid secret: password is missing", e.getMessage());
+    }
+
+    @Test
+    void testBlankUsername() {
+        SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
+        sourcesSecret.username = "  ";
+        sourcesSecret.password = "passw0rd";
+        when(sourcesClient.getById(anyString(), anyString(), eq(123L))).thenReturn(sourcesSecret);
+
+        Optional<AuthenticationResult> secretResult = secretsLoader.fetchAuthenticationData("default_org", buildAuthentication(AuthenticationType.SECRET_TOKEN.name(), 123L));
+
+        assertTrue(secretResult.isPresent());
+        assertEquals("  ", secretResult.get().username);
+        assertEquals("passw0rd", secretResult.get().password);
+    }
+
+    @Test
+    void testNullUsername() {
+        SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
+        sourcesSecret.username = null;
+        sourcesSecret.password = "passw0rd";
+        when(sourcesClient.getById(anyString(), anyString(), eq(123L))).thenReturn(sourcesSecret);
+
+        Optional<AuthenticationResult> secretResult = secretsLoader.fetchAuthenticationData("default_org", buildAuthentication(AuthenticationType.SECRET_TOKEN.name(), 123L));
+
+        assertTrue(secretResult.isPresent());
+        assertEquals(null, secretResult.get().username);
+        assertEquals("passw0rd", secretResult.get().password);
+    }
+
+    @Test
+    void testOidcAuthenticationFlow() {
+        when(connectorConfig.isSourcesOidcAuthEnabled(anyString())).thenReturn(true);
+
+        SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
+        sourcesSecret.username = "john_doe";
+        sourcesSecret.password = "oidc_passw0rd";
+        when(sourcesOidcClient.getById(anyString(), eq(123L))).thenReturn(sourcesSecret);
+
+        Optional<AuthenticationResult> secretResult = secretsLoader.fetchAuthenticationData("oidc_org", buildAuthentication(AuthenticationType.BEARER.name(), 123L));
+
+        verify(sourcesOidcClient, times(1)).getById(anyString(), eq(123L));
+        verify(sourcesClient, never()).getById(anyString(), anyString(), anyLong());
+        assertTrue(secretResult.isPresent());
+        assertEquals(sourcesSecret.username, secretResult.get().username);
+        assertEquals(sourcesSecret.password, secretResult.get().password);
+        assertEquals(AuthenticationType.BEARER, secretResult.get().authenticationType);
     }
 
     private static JsonObject buildAuthentication(String type, Long secretId) {
