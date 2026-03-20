@@ -16,8 +16,18 @@ public interface WebhookRestClient {
 
     @POST
     @Consumes(JSON_UTF8)
-    Response post(@HeaderParam(X_INSIGHT_TOKEN_HEADER) String xRhSourcesOrgId,
-                  @HeaderParam("Authorization") String bearer,
+    Response postWithInsightToken(@HeaderParam(X_INSIGHT_TOKEN_HEADER) String xInsightTokenHeader,
                   @Url String url,
+                  String body);
+
+    @POST
+    @Consumes(JSON_UTF8)
+    Response postWithBearer(@HeaderParam("Authorization") String bearer,
+                  @Url String url,
+                  String body);
+
+    @POST
+    @Consumes(JSON_UTF8)
+    Response post(@Url String url,
                   String body);
 }

@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,8 +34,9 @@ public class AuthenticationLoaderTest {
 
     @Test
     void testNoSecretId() {
-        secretsLoader.fetchAuthenticationData("", null);
+        Optional<AuthenticationResult> secret = secretsLoader.fetchAuthenticationData("", null);
         verify(sourcesClient, never()).getById(anyString(), anyString(), anyLong());
+        assertTrue(secret.isEmpty());
     }
 
     @Test
@@ -42,11 +44,11 @@ public class AuthenticationLoaderTest {
         SourcesSecretResponse sourcesSecret = new SourcesSecretResponse();
         sourcesSecret.username = "john_doe";
         sourcesSecret.password = "passw0rd";
-        when(sourcesClient.getById(anyString(), anyString(), anyLong())).thenReturn(sourcesSecret);
+        when(sourcesClient.getById(anyString(), anyString(), eq(123L))).thenReturn(sourcesSecret);
 
         Optional<AuthenticationResult> secretResult = secretsLoader.fetchAuthenticationData("default_org", buildAuthentication(AuthenticationType.SECRET_TOKEN.name(), 123L));
 
-        verify(sourcesClient, times(1)).getById(anyString(), anyString(), anyLong());
+        verify(sourcesClient, times(1)).getById(anyString(), anyString(), eq(123L));
         assertTrue(secretResult.isPresent());
         assertEquals(sourcesSecret.username, secretResult.get().username);
         assertEquals(sourcesSecret.password, secretResult.get().password);

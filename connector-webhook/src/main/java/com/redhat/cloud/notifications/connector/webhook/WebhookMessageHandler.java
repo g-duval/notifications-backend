@@ -24,7 +24,7 @@ public class WebhookMessageHandler extends MessageHandler {
     public static final String X_INSIGHT_TOKEN_HEADER = "X-Insight-Token";
 
     @Inject
-    AuthenticationLoader secretsLoader;
+    AuthenticationLoader authenticationLoader;
 
     @Inject
     @RestClient
@@ -36,25 +36,30 @@ public class WebhookMessageHandler extends MessageHandler {
         NotificationToConnectorHttp notification = incomingCloudEvent.getData().mapTo(NotificationToConnectorHttp.class);
         final Optional<AuthenticationResult> authenticationResultOptional;
         try {
-            authenticationResultOptional = secretsLoader.fetchAuthenticationData(notification.getOrgId(), notification.getAuthentication());
+            authenticationResultOptional = authenticationLoader.fetchAuthenticationData(notification.getOrgId(), notification.getAuthentication());
         } catch (Exception e) {
             throw new RuntimeException("Error fetching secrets '" + e.getMessage() + "'", e);
         }
 
-        String bearerToken = null;
-        String insightToken = null;
-        if (authenticationResultOptional.isPresent()) {
-            if (BEARER == authenticationResultOptional.get().authenticationType) {
-                bearerToken = "Bearer " + authenticationResultOptional.get().password;
-            } else if (SECRET_TOKEN == authenticationResultOptional.get().authenticationType) {
-                insightToken = authenticationResultOptional.get().password;
-            }
-        }
-
         HandledHttpMessageDetails handledMessageDetails = new HandledHttpMessageDetails();
         handledMessageDetails.targetUrl = notification.getEndpointProperties().getTargetUrl();
-        try (Response response = webhookRestClient.post(insightToken, bearerToken, notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {
-            handledMessageDetails.httpStatus = response.getStatus();
+
+        if (authenticationResultOptional.isPresent()) {
+            if (BEARER == authenticationResultOptional.get().authenticationType) {
+                final String bearerToken = "Bearer " + authenticationResultOptional.get().password;
+                try (Response response = webhookRestClient.postWithBearer(bearerToken, notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {
+                    handledMessageDetails.httpStatus = response.getStatus();
+                }
+            } else if (SECRET_TOKEN == authenticationResultOptional.get().authenticationType) {
+                final String insightToken = authenticationResultOptional.get().password;
+                try (Response response = webhookRestClient.postWithInsightToken(insightToken, notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {
+                    handledMessageDetails.httpStatus = response.getStatus();
+                }
+            }
+        } else {
+            try (Response response = webhookRestClient.post(notification.getEndpointProperties().getTargetUrl(), notification.getPayload().encode())) {
+                handledMessageDetails.httpStatus = response.getStatus();
+            }
         }
 
         return handledMessageDetails;
