@@ -3,6 +3,7 @@ package com.redhat.cloud.notifications.connector.webhook;
 import com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationLoader;
 import com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationResult;
 import com.redhat.cloud.notifications.connector.v2.MessageHandler;
+import com.redhat.cloud.notifications.connector.v2.http.HttpNotificationValidator;
 import com.redhat.cloud.notifications.connector.v2.http.models.HandledHttpMessageDetails;
 import com.redhat.cloud.notifications.connector.v2.http.models.NotificationToConnectorHttp;
 import com.redhat.cloud.notifications.connector.v2.models.HandledMessageDetails;
@@ -30,10 +31,15 @@ public class WebhookMessageHandler extends MessageHandler {
     @RestClient
     WebhookRestClient webhookRestClient;
 
+    @Inject
+    HttpNotificationValidator httpNotificationValidator;
+
     @Override
     public HandledMessageDetails handle(final IncomingCloudEventMetadata<JsonObject> incomingCloudEvent) {
 
-        NotificationToConnectorHttp notification = incomingCloudEvent.getData().mapTo(NotificationToConnectorHttp.class);
+        // Parse and validate the incoming notification
+        NotificationToConnectorHttp notification = httpNotificationValidator.parseAndValidate(incomingCloudEvent);
+
         final Optional<AuthenticationResult> authenticationResultOptional;
         try {
             authenticationResultOptional = authenticationLoader.fetchAuthenticationData(notification.getOrgId(), notification.getAuthentication());

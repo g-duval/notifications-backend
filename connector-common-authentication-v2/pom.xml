@@ -44,13 +44,6 @@
 
         <!-- Scope: test -->
 
-        <!-- InMemory messaging for testing -->
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- WireMock -->
         <dependency>
             <groupId>org.wiremock</groupId>
@@ -62,7 +55,7 @@
         <!-- Quarkus -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
+            <artifactId>quarkus-junit-mockito</artifactId>
             <scope>test</scope>
         </dependency>
 

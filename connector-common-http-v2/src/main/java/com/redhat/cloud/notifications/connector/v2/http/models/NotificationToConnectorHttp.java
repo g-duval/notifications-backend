@@ -4,13 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.redhat.cloud.notifications.connector.v2.models.NotificationToConnector;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.vertx.core.json.JsonObject;
+import jakarta.validation.constraints.NotNull;
 
 @RegisterForReflection
 public class NotificationToConnectorHttp extends NotificationToConnector {
 
+    @NotNull
     @JsonProperty("endpoint_properties")
     private EndpointProperties endpointProperties;
 
+    @NotNull
     @JsonProperty("payload")
     private JsonObject payload;
 
@@ -19,6 +22,8 @@ public class NotificationToConnectorHttp extends NotificationToConnector {
 
     @RegisterForReflection
     public static class EndpointProperties {
+
+        @NotNull
         @JsonProperty("url")
         private String targetUrl;
 
