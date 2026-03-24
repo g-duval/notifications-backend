@@ -87,7 +87,7 @@ class HttpOutgoingCloudEventBuilderTest {
         assertNotNull(error);
         assertEquals("CONNECTION_REFUSED", error.getString("error_type"));
         // Should not have http_status_code for connection errors
-        assertEquals(null, error.getInteger("http_status_code"));
+        assertNull(error.getInteger("http_status_code"));
     }
 
     @Test
