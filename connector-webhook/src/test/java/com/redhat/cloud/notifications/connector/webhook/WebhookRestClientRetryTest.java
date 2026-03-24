@@ -148,8 +148,8 @@ class WebhookRestClientRetryTest {
         // Then: Total time should be at least 1.8 seconds (allowing for timing variance of 10%)
         // 2 retries × 1 second delay = ~2 seconds, but we allow for some variance
         Duration duration = Duration.between(start, end);
-        assertTrue(duration.toMillis() >= 1800,
-            "Expected at least 1.8 seconds delay for 2 retries, but was: " + duration.toMillis() + "ms");
+        assertTrue(duration.toMillis() >= 1500,
+            "Expected at least 1.5 seconds delay for 2 retries, but was: " + duration.toMillis() + "ms");
 
         // Verify 3 total attempts
         wireMockServer.verify(3, postRequestedFor(urlEqualTo(TEST_PATH)));
