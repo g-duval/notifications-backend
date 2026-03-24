@@ -92,10 +92,13 @@ class NotificationToConnectorHttpTest {
         // When - validate
         Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
 
-        // Then - no violations (nested validation requires @Valid annotation on endpointProperties field)
-        // Note: To enable validation of targetUrl, add @Valid annotation to the endpointProperties field
-        assertTrue(violations.isEmpty(),
-            "Nested field validation does not occur without @Valid annotation on parent field");
+        // Then - should have violations for null targetUrl
+        // With @Valid annotation on endpointProperties field, nested validation now occurs
+        // Note: Both @NotNull and @NotBlank trigger on null, so we get 2 violations
+        assertTrue(violations.size() >= 1, "Should have at least one violation for null targetUrl");
+        boolean hasTargetUrlViolation = violations.stream()
+            .anyMatch(v -> "endpointProperties.targetUrl".equals(v.getPropertyPath().toString()));
+        assertTrue(hasTargetUrlViolation, "Should have violation for targetUrl field");
     }
 
     @Test
@@ -139,5 +142,106 @@ class NotificationToConnectorHttpTest {
 
         // Then - no violations (authentication is optional)
         assertTrue(violations.isEmpty(), "Should not have violations when authentication is null");
+    }
+
+    @Test
+    void testInvalidUrlFormat() {
+        // Given - notification with invalid URL format
+        NotificationToConnectorHttp notification = new NotificationToConnectorHttp();
+
+        NotificationToConnectorHttp.EndpointProperties endpointProperties = new NotificationToConnectorHttp.EndpointProperties();
+        endpointProperties.setTargetUrl("not a valid url");
+        notification.setEndpointProperties(endpointProperties);
+
+        JsonObject payload = new JsonObject().put("message", "test");
+        notification.setPayload(payload);
+
+        // When - validate
+        Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
+
+        // Then - should have one violation for invalid URL format
+        assertEquals(1, violations.size(), "Should have exactly one violation for invalid URL format");
+        ConstraintViolation<NotificationToConnectorHttp> violation = violations.iterator().next();
+        assertEquals("endpointProperties.targetUrl", violation.getPropertyPath().toString());
+        assertTrue(violation.getMessage().contains("must be a valid URL") || violation.getMessage().contains("URL"),
+            "Violation message should indicate URL validation failure");
+    }
+
+    @Test
+    void testMalformedUrl() {
+        // Given - notification with malformed URL
+        NotificationToConnectorHttp notification = new NotificationToConnectorHttp();
+
+        NotificationToConnectorHttp.EndpointProperties endpointProperties = new NotificationToConnectorHttp.EndpointProperties();
+        endpointProperties.setTargetUrl("http://:::");
+        notification.setEndpointProperties(endpointProperties);
+
+        JsonObject payload = new JsonObject().put("message", "test");
+        notification.setPayload(payload);
+
+        // When - validate
+        Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
+
+        // Then - should have one violation for malformed URL
+        assertEquals(1, violations.size(), "Should have exactly one violation for malformed URL");
+        ConstraintViolation<NotificationToConnectorHttp> violation = violations.iterator().next();
+        assertEquals("endpointProperties.targetUrl", violation.getPropertyPath().toString());
+    }
+
+    @Test
+    void testValidHttpUrl() {
+        // Given - valid HTTP URL
+        NotificationToConnectorHttp notification = new NotificationToConnectorHttp();
+
+        NotificationToConnectorHttp.EndpointProperties endpointProperties = new NotificationToConnectorHttp.EndpointProperties();
+        endpointProperties.setTargetUrl("http://example.com:8080/webhook/path");
+        notification.setEndpointProperties(endpointProperties);
+
+        JsonObject payload = new JsonObject().put("message", "test");
+        notification.setPayload(payload);
+
+        // When - validate
+        Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
+
+        // Then - no violations
+        assertTrue(violations.isEmpty(), "Valid HTTP URL should not have violations");
+    }
+
+    @Test
+    void testValidHttpsUrl() {
+        // Given - valid HTTPS URL
+        NotificationToConnectorHttp notification = new NotificationToConnectorHttp();
+
+        NotificationToConnectorHttp.EndpointProperties endpointProperties = new NotificationToConnectorHttp.EndpointProperties();
+        endpointProperties.setTargetUrl("https://secure.example.com/api/webhook?param=value");
+        notification.setEndpointProperties(endpointProperties);
+
+        JsonObject payload = new JsonObject().put("message", "test");
+        notification.setPayload(payload);
+
+        // When - validate
+        Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
+
+        // Then - no violations
+        assertTrue(violations.isEmpty(), "Valid HTTPS URL should not have violations");
+    }
+
+    @Test
+    void testEmptyUrl() {
+        // Given - notification with empty URL
+        NotificationToConnectorHttp notification = new NotificationToConnectorHttp();
+
+        NotificationToConnectorHttp.EndpointProperties endpointProperties = new NotificationToConnectorHttp.EndpointProperties();
+        endpointProperties.setTargetUrl("");
+        notification.setEndpointProperties(endpointProperties);
+
+        JsonObject payload = new JsonObject().put("message", "test");
+        notification.setPayload(payload);
+
+        // When - validate
+        Set<ConstraintViolation<NotificationToConnectorHttp>> violations = validator.validate(notification);
+
+        // Then - should have violation(s) for empty URL
+        assertTrue(violations.size() >= 1, "Should have at least one violation for empty URL");
     }
 }

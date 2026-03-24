@@ -131,7 +131,7 @@ class WebhookConnectorIntegrationTest extends BaseHttpConnectorIntegrationTest {
             String cloudEventId = sendCloudEventMessage(incomingPayload);
 
             // Assert failed response
-            assertFailedOutgoingMessage(cloudEventId, "Error fetching secrets");
+            assertFailedOutgoingMessage(cloudEventId, "Error fetching authentication data");
 
         } finally {
             addBearerToken = false;

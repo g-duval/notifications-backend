@@ -10,6 +10,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.reactive.RestPath;
+import java.time.temporal.ChronoUnit;
 
 /**
  * <p>PSK-based REST Client for the Sources API. The OpenAPI spec is available at:</p>
@@ -44,7 +45,7 @@ public interface SourcesPskClient {
      */
     @GET
     @Path("/internal/v2.0/secrets/{id}")
-    @Retry
+    @Retry(delay = 1, delayUnit = ChronoUnit.SECONDS, maxRetries = 2) // 1 initial + 2 retries = 3 attempts
     SourcesSecretResponse getById(
         @HeaderParam("x-rh-sources-org-id") @NotBlank String xRhSourcesOrgId,
         @HeaderParam("x-rh-sources-psk") @NotBlank String xRhSourcesPsk,
