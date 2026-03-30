@@ -44,6 +44,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
 
         // Assert metrics
         assertMetricsIncrement(1, 1, 0);
+        assertHandlerDurationTimerRecorded(1);
 
         // Check what was actually sent to the original endpoint
         List<LoggedRequest> originalRequests = getClient().findAll(
@@ -79,6 +80,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
 
         // Assert metrics
         assertMetricsIncrement(1, 0, 1);
+        assertHandlerDurationTimerRecorded(1);
     }
 
     @Test
@@ -97,6 +99,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
 
         // Assert metrics
         assertMetricsIncrement(1, 0, 1);
+        assertHandlerDurationTimerRecorded(1);
     }
 
     // Hook methods for subclasses to override

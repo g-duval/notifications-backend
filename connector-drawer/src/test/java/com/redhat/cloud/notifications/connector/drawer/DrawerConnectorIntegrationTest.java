@@ -114,6 +114,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
 
         // Check metrics
         assertMetricsIncrement(1, 1, 0);
+        assertHandlerDurationTimerRecorded(1);
     }
 
     @Test
@@ -144,6 +145,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
 
         // Check metrics
         assertMetricsIncrement(1, 1, 0);
+        assertHandlerDurationTimerRecorded(1);
     }
 
     @Test
@@ -173,6 +175,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
 
         // Check metrics
         assertMetricsIncrement(1, 0, 1);
+        assertHandlerDurationTimerRecorded(1);
     }
 
     private void assertDrawerMessage(Message<JsonObject> message, int expectedUserCount) {

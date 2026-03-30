@@ -82,6 +82,7 @@ class GoogleChatConnectorIntegrationTest extends BaseHttpConnectorIntegrationTes
 
         assertSuccessfulOutgoingMessage(cloudEventId, encodedUrl, 200);
         assertMetricsIncrement(1, 1, 0);
+        assertHandlerDurationTimerRecorded(1);
 
         // Verify WireMock received the request at the decoded path with query params
         List<LoggedRequest> requests = getClient().findAll(
@@ -117,6 +118,7 @@ class GoogleChatConnectorIntegrationTest extends BaseHttpConnectorIntegrationTes
 
         assertSuccessfulOutgoingMessage(cloudEventId, encodedUrl, 200);
         assertMetricsIncrement(1, 1, 0);
+        assertHandlerDurationTimerRecorded(1);
 
         List<LoggedRequest> requests = getClient().findAll(
             postRequestedFor(urlPathEqualTo(webhookPath))
