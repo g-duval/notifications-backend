@@ -43,7 +43,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
         assertSuccessfulOutgoingMessage(cloudEventId, targetUrl, 200);
 
         // Assert metrics
-        assertMetricsIncrement(1, 1, 0);
+        assertMetricsIncrement(1, 0);
         assertHandlerDurationTimerRecorded(1);
 
         // Check what was actually sent to the original endpoint
@@ -79,7 +79,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
         assertFailedOutgoingMessage(cloudEventId, expectedErrorType, String.valueOf(statusCode));
 
         // Assert metrics
-        assertMetricsIncrement(1, 0, 1);
+        assertMetricsIncrement(0, 1);
         assertHandlerDurationTimerRecorded(1);
     }
 
@@ -98,7 +98,7 @@ public abstract class BaseHttpConnectorIntegrationTest extends BaseConnectorInte
         assertFailedOutgoingMessage(cloudEventId, "Connection reset");
 
         // Assert metrics
-        assertMetricsIncrement(1, 0, 1);
+        assertMetricsIncrement(0, 1);
         assertHandlerDurationTimerRecorded(1);
     }
 

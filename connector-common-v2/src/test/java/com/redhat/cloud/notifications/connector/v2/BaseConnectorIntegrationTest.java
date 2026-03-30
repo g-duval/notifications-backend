@@ -30,7 +30,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.redhat.cloud.notifications.MockServerLifecycleManager.getClient;
 import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.FAILED_COUNTER_NAME;
 import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.HANDLER_DURATION_TIMER_NAME;
-import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.PROCESSED_COUNTER_NAME;
 import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.SUCCEEDED_COUNTER_NAME;
 import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.X_RH_NOTIFICATIONS_CONNECTOR_HEADER;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -213,7 +212,6 @@ public abstract class BaseConnectorIntegrationTest {
      */
     protected void saveConnectorMetrics() {
         // Save metrics that we want to track
-        micrometerAssertionHelper.saveCounterValueFilteredByTagsBeforeTest(PROCESSED_COUNTER_NAME, "connector", connectorConfig.getConnectorName());
         micrometerAssertionHelper.saveCounterValueFilteredByTagsBeforeTest(SUCCEEDED_COUNTER_NAME, "connector", connectorConfig.getConnectorName());
         micrometerAssertionHelper.saveCounterValueFilteredByTagsBeforeTest(FAILED_COUNTER_NAME, "connector", connectorConfig.getConnectorName());
         micrometerAssertionHelper.saveTimerCountFilteredByTagsBeforeTest(HANDLER_DURATION_TIMER_NAME, "connector", connectorConfig.getConnectorName());
@@ -222,8 +220,7 @@ public abstract class BaseConnectorIntegrationTest {
     /**
      * Asserts metrics changes
      */
-    protected void assertMetricsIncrement(double expectedProcessed, double expectedSucceeded, double expectedFailed) {
-        micrometerAssertionHelper.assertCounterValueFilteredByTagsIncrement(PROCESSED_COUNTER_NAME, "connector", connectorConfig.getConnectorName(), expectedProcessed);
+    protected void assertMetricsIncrement(double expectedSucceeded, double expectedFailed) {
         micrometerAssertionHelper.assertCounterValueFilteredByTagsIncrement(SUCCEEDED_COUNTER_NAME, "connector", connectorConfig.getConnectorName(), expectedSucceeded);
         micrometerAssertionHelper.assertCounterValueFilteredByTagsIncrement(FAILED_COUNTER_NAME, "connector", connectorConfig.getConnectorName(), expectedFailed);
     }

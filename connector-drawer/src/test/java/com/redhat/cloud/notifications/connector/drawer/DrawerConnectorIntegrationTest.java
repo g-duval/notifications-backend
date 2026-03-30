@@ -113,7 +113,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
         assertSuccessfulOutgoingMessage(cloudEventId, null, null);
 
         // Check metrics
-        assertMetricsIncrement(1, 1, 0);
+        assertMetricsIncrement(1, 0);
         assertHandlerDurationTimerRecorded(1);
     }
 
@@ -144,7 +144,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
         assertSuccessfulOutgoingMessage(cloudEventId, null, null);
 
         // Check metrics
-        assertMetricsIncrement(1, 1, 0);
+        assertMetricsIncrement(1, 0);
         assertHandlerDurationTimerRecorded(1);
     }
 
@@ -174,7 +174,7 @@ class DrawerConnectorIntegrationTest extends BaseConnectorIntegrationTest {
         assertEquals(0, inMemoryDrawerSink.received().size());
 
         // Check metrics
-        assertMetricsIncrement(1, 0, 1);
+        assertMetricsIncrement(0, 1);
         assertHandlerDurationTimerRecorded(1);
     }
 

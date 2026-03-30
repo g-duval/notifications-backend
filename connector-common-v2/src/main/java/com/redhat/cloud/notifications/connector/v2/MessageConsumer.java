@@ -26,7 +26,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @ApplicationScoped
 public class MessageConsumer {
 
-    public static final String PROCESSED_COUNTER_NAME = "notifications.connector.messages.processed";
     public static final String SUCCEEDED_COUNTER_NAME = "notifications.connector.messages.succeeded";
     public static final String FAILED_COUNTER_NAME = "notifications.connector.messages.failed";
     public static final String HANDLER_DURATION_TIMER_NAME = "notifications.connector.handler.duration";
@@ -46,7 +45,6 @@ public class MessageConsumer {
     @Inject
     MeterRegistry meterRegistry;
 
-    private Counter processedCounter;
     private Counter succeededCounter;
     private Counter failedCounter;
     private Timer handlerDurationTimer;
@@ -55,10 +53,6 @@ public class MessageConsumer {
 
     @PostConstruct
     void init() {
-        processedCounter = Counter.builder(PROCESSED_COUNTER_NAME)
-            .description("Total number of messages processed by the connector")
-            .tag("connector", connectorConfig.getConnectorName())
-            .register(meterRegistry);
         succeededCounter = Counter.builder(SUCCEEDED_COUNTER_NAME)
             .description("Total number of messages successfully processed by the connector")
             .tag("connector", connectorConfig.getConnectorName())
@@ -113,7 +107,6 @@ public class MessageConsumer {
             } else {
                 failedCounter.increment();
             }
-            processedCounter.increment();
         }
         return message.ack();
     }
