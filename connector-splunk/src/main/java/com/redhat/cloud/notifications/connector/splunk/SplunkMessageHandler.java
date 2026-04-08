@@ -115,10 +115,17 @@ public class SplunkMessageHandler extends MessageHandler {
         if (authResult.isEmpty()) {
             throw new IllegalStateException("Authentication is required for Splunk HEC");
         }
-        return switch (authResult.get().authenticationType) {
-            case SECRET_TOKEN -> "Splunk " + authResult.get().password;
+
+        final AuthenticationResult resolvedAuth = authResult.get();
+        return switch (resolvedAuth.authenticationType) {
+            case SECRET_TOKEN -> {
+                if (resolvedAuth.password == null || resolvedAuth.password.isBlank()) {
+                    throw new IllegalStateException("Missing Splunk secret token");
+                }
+                yield "Splunk " + resolvedAuth.password;
+            }
             case BEARER -> throw new IllegalStateException("Unsupported authentication type: BEARER");
-            default -> throw new IllegalStateException("Unexpected authentication type: " + authResult.get().authenticationType);
+            default -> throw new IllegalStateException("Unexpected authentication type: " + resolvedAuth.authenticationType);
         };
     }
 

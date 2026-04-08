@@ -464,6 +464,78 @@ class SplunkMessageHandlerTest {
         assertTrue(capturedBody.contains("\"event-2-key\":\"event-2-value\""));
     }
 
+    // --- Coverage gap tests ---
+
+    @Test
+    void testNullCloudEventDataIsRejected() {
+        assertThrows(IllegalStateException.class, () ->
+            handler.handle(buildIncomingCloudEvent("test-id", "test-type", null))
+        );
+    }
+
+    @Test
+    void testBlankSecretTokenIsRejected() {
+        SourcesSecretResponse secretResponse = new SourcesSecretResponse();
+        secretResponse.password = "   ";
+        when(authenticationLoader.fetchAuthenticationData(anyString(), any(JsonObject.class)))
+            .thenReturn(Optional.of(new AuthenticationResult(secretResponse, AuthenticationType.SECRET_TOKEN)));
+
+        JsonObject payload = buildPayload("https://splunk.example.com", JsonArray.of(JsonObject.of("k", "v")));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+            handler.handle(buildIncomingCloudEvent("test-id", "test-type", payload))
+        );
+        assertTrue(ex.getMessage().contains("Missing Splunk secret token"));
+    }
+
+    @Test
+    void testNullSecretTokenIsRejected() {
+        SourcesSecretResponse secretResponse = new SourcesSecretResponse();
+        secretResponse.password = null;
+        when(authenticationLoader.fetchAuthenticationData(anyString(), any(JsonObject.class)))
+            .thenReturn(Optional.of(new AuthenticationResult(secretResponse, AuthenticationType.SECRET_TOKEN)));
+
+        JsonObject payload = buildPayload("https://splunk.example.com", JsonArray.of(JsonObject.of("k", "v")));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+            handler.handle(buildIncomingCloudEvent("test-id", "test-type", payload))
+        );
+        assertTrue(ex.getMessage().contains("Missing Splunk secret token"));
+    }
+
+    @Test
+    void testInvalidUriSyntaxIsRejected() {
+        JsonObject authentication = new JsonObject();
+        authentication.put("type", AuthenticationType.SECRET_TOKEN.name());
+        authentication.put("secretId", 123L);
+
+        JsonObject metadata = new JsonObject();
+        metadata.put("url", "https://invalid host with spaces");
+        metadata.put("authentication", authentication);
+
+        JsonObject payload = new JsonObject();
+        payload.put("notif-metadata", metadata);
+        payload.put("org_id", DEFAULT_ORG_ID);
+        payload.put("account_id", DEFAULT_ACCOUNT_ID);
+        payload.put("events", JsonArray.of(JsonObject.of("k", "v")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+            handler.handle(buildIncomingCloudEvent("test-id", "test-type", payload))
+        );
+    }
+
+    @Test
+    void testBuildSplunkPayloadWithNullEvents() {
+        SplunkNotification notification = new SplunkNotification();
+        notification.setOrgId(DEFAULT_ORG_ID);
+        notification.accountId = DEFAULT_ACCOUNT_ID;
+        notification.events = null;
+
+        String result = SplunkMessageHandler.buildSplunkPayload(notification);
+        assertTrue(result.contains("\"source\":\"eventing\""));
+        assertTrue(result.contains("\"org_id\":\"" + DEFAULT_ORG_ID + "\""));
+    }
+
     private void mockAuthentication() {
         SourcesSecretResponse secretResponse = new SourcesSecretResponse();
         secretResponse.password = "my-token";
