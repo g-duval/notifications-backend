@@ -91,6 +91,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -252,7 +253,7 @@ public class EventResourceTest extends DbIsolatedTest {
         assertNull(page.getData().get(0).getPayload());
         assertLinks(page.getLinks(), "first", "last");
 
-        when(backendConfig.isDrawerEnabled()).thenReturn(true);
+        when(backendConfig.isDrawerEnabled(eq(DEFAULT_ORG_ID))).thenReturn(true);
         /*
          * Test #1.2
          * Account: DEFAULT_ACCOUNT_ID
@@ -1038,7 +1039,7 @@ public class EventResourceTest extends DbIsolatedTest {
     @Test
     void testEventsWithKesselCriterion() {
         when(backendConfig.isKesselChecksOnEventLogEnabled(anyString())).thenReturn(true);
-        when(backendConfig.isDrawerEnabled()).thenReturn(true);
+        when(backendConfig.isDrawerEnabled(eq(DEFAULT_ORG_ID))).thenReturn(true);
 
         Header defaultIdentityHeader = mockRbac(DEFAULT_ACCOUNT_ID, DEFAULT_ORG_ID, DEFAULT_USER, FULL_ACCESS);
 
