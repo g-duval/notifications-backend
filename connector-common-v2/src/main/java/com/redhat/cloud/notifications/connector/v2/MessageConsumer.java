@@ -83,6 +83,11 @@ public class MessageConsumer {
         }
 
         IncomingCloudEventMetadata<JsonObject> cloudEventMetadata = message.getMetadata(IncomingCloudEventMetadata.class).get();
+
+        if (cloudEventMetadata == null || cloudEventMetadata.getData() == null) {
+            throw new IllegalArgumentException("Incoming CloudEvent data must not be null");
+        }
+
         Timer.Sample sample = Timer.start(meterRegistry);
         boolean success = false;
         try {
