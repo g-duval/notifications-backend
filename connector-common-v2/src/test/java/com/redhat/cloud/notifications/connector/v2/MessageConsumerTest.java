@@ -1,5 +1,6 @@
 package com.redhat.cloud.notifications.connector.v2;
 
+import com.redhat.cloud.notifications.MicrometerAssertionHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.reactive.messaging.ce.IncomingCloudEventMetadata;
 import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
@@ -8,12 +9,12 @@ import jakarta.inject.Inject;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.FAILED_COUNTER_NAME;
 import static com.redhat.cloud.notifications.connector.v2.MessageConsumer.X_RH_NOTIFICATIONS_CONNECTOR_HEADER;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +26,23 @@ class MessageConsumerTest {
 
     @Inject
     ConnectorConfig connectorConfig;
+
+    @Inject
+    MicrometerAssertionHelper micrometerAssertionHelper;
+
+    @BeforeEach
+    void setUp() {
+        micrometerAssertionHelper.saveCounterValueFilteredByTagsBeforeTest(FAILED_COUNTER_NAME, "connector", connectorConfig.getConnectorName());
+    }
+
+    @Test
+    void testMissingCloudEventMetadata() {
+        Message<JsonObject> message = Message.of(new JsonObject());
+
+        messageConsumer.processMessage(message);
+
+        micrometerAssertionHelper.assertCounterValueFilteredByTagsIncrement(FAILED_COUNTER_NAME, "connector", connectorConfig.getConnectorName(), 1);
+    }
 
     @Test
     void testNullCloudEventData() {
@@ -42,9 +60,8 @@ class MessageConsumerTest {
             .addMetadata(kafkaHeaders)
             .addMetadata(cloudEvent);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            messageConsumer.processMessage(message)
-        );
-        assertEquals("Incoming CloudEvent data must not be null", exception.getMessage());
+        messageConsumer.processMessage(message);
+
+        micrometerAssertionHelper.assertCounterValueFilteredByTagsIncrement(FAILED_COUNTER_NAME, "connector", connectorConfig.getConnectorName(), 1);
     }
 }

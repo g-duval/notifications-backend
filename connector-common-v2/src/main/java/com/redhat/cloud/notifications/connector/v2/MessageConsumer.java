@@ -73,6 +73,15 @@ public class MessageConsumer {
     public CompletionStage<Void> processMessage(Message<JsonObject> message) {
         final long startTime = System.currentTimeMillis();
 
+        Optional<IncomingCloudEventMetadata> cloudEventOpt = message.getMetadata(IncomingCloudEventMetadata.class);
+        if (cloudEventOpt.isEmpty() || null == cloudEventOpt.get().getData()) {
+            Log.error("Incoming CloudEvent metadata and data must not be null");
+            failedCounter.increment();
+            return message.ack();
+        }
+
+        final IncomingCloudEventMetadata<JsonObject> cloudEventMetadata = cloudEventOpt.get();
+
         // Handle Kafka headers if available
         Optional<String> connectorHeader = extractConnectorHeader(message);
 
@@ -80,12 +89,6 @@ public class MessageConsumer {
         if (connectorHeader.isEmpty() || !connectorConfig.getSupportedConnectorHeaders().contains(connectorHeader.get())) {
             Log.debugf("Message filtered out for connector %s", connectorConfig.getConnectorName());
             return message.ack();
-        }
-
-        IncomingCloudEventMetadata<JsonObject> cloudEventMetadata = message.getMetadata(IncomingCloudEventMetadata.class).get();
-
-        if (cloudEventMetadata == null || cloudEventMetadata.getData() == null) {
-            throw new IllegalArgumentException("Incoming CloudEvent data must not be null");
         }
 
         Timer.Sample sample = Timer.start(meterRegistry);
