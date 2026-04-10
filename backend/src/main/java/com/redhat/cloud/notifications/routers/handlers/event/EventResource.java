@@ -158,7 +158,7 @@ public class EventResource {
                 actions = Collections.emptyList();
             } else {
                 actions = event.getHistoryEntries().stream()
-                    .filter(notificationHistory -> EndpointType.DRAWER != notificationHistory.getEndpointType() || backendConfig.isDrawerEnabled())
+                    .filter(notificationHistory -> EndpointType.DRAWER != notificationHistory.getEndpointType() || backendConfig.isDrawerEnabled(orgId))
                     .map(historyEntry -> {
                         EventLogEntryAction action = new EventLogEntryAction();
                         action.setId(historyEntry.getId());
