@@ -19,7 +19,6 @@ public class EmailPayloadAggregatorFactory {
     private static final String RESOURCE_OPTIMIZATION = "resource-optimization";
     private static final String ERRATA = "errata-notifications";
 
-
     private EmailPayloadAggregatorFactory() {
 
     }
@@ -51,6 +50,8 @@ public class EmailPayloadAggregatorFactory {
                 switch (application) {
                     case ERRATA:
                         return new ErrataEmailPayloadAggregator();
+                    case APPLICATION_SERVICES:
+                        return new ApplicationServicesEmailPayloadAggregator();
                     default:
                         // Do nothing.
                         break;
