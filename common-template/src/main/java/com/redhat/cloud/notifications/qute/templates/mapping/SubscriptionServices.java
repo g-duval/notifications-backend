@@ -19,6 +19,9 @@ public class SubscriptionServices {
     public static final String ERRATA_APP_NAME = "errata-notifications";
     static final String ERRATA_FOLDER_NAME = "Errata/";
 
+    public static final String APPLICATION_SERVICES_APP_NAME = "application-services";
+    static final String APPLICATION_SERVICES_FOLDER_NAME = "ApplicationServices/";
+
     public static final String SUBSCRIPTIONS_USAGE_APP_NAME = "subscriptions";
     static final String SUBSCRIPTIONS_USAGE_FOLDER_NAME = "SubscriptionsUsage/";
 
@@ -49,6 +52,9 @@ public class SubscriptionServices {
         entry(new TemplateDefinition(SLACK, BUNDLE_NAME, ERRATA_APP_NAME, ERRATA_NEW_SUBSCRIPTION_ENHANCEMENT_ERRATA), ERRATA_FOLDER_NAME + "newSubscriptionEnhancementErrata.json"),
 
         entry(new TemplateDefinition(EMAIL_DAILY_DIGEST_BODY, BUNDLE_NAME, ERRATA_APP_NAME, null), ERRATA_FOLDER_NAME + "dailyEmailBody.html"),
+
+        // Application Services Releases
+        entry(new TemplateDefinition(EMAIL_DAILY_DIGEST_BODY, BUNDLE_NAME, APPLICATION_SERVICES_APP_NAME, null), APPLICATION_SERVICES_FOLDER_NAME + "dailyEmailBody.html"),
 
         // Subscriptions Usage
         entry(new TemplateDefinition(EMAIL_TITLE, BUNDLE_NAME, SUBSCRIPTIONS_USAGE_APP_NAME, SUBSCRIPTIONS_USAGE_EXCEEDED_UTILIZATION_THRESHOLD), SUBSCRIPTIONS_USAGE_FOLDER_NAME + "usageThresholdExceededEmailTitle.txt"),
