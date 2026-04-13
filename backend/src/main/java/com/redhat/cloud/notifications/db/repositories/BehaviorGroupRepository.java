@@ -166,7 +166,7 @@ public class BehaviorGroupRepository {
         }
 
         List<BehaviorGroup> behaviorGroups;
-        if (backendConfig.isUseDrawerfilteredQuery(orgId)) {
+        if (backendConfig.isUseDrawerFilteredQuery(orgId)) {
             String query = "SELECT DISTINCT b FROM BehaviorGroup b LEFT JOIN FETCH b.actions a " +
                 "LEFT JOIN FETCH a.endpoint e " +
                 "WHERE (b.orgId = :orgId OR b.orgId IS NULL) AND b.bundle.id = :bundleId " +

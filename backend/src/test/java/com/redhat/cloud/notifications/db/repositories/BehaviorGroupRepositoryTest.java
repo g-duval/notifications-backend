@@ -386,7 +386,7 @@ public class BehaviorGroupRepositoryTest extends DbIsolatedTest {
         assertFalse(bgActions.isEmpty());
         updateAndCheckBehaviorGroupActions(DEFAULT_ORG_ID, bundle.getId(), behaviorGroup.getId(), endpoint1.getId(), endpoint2.getId());
 
-        when(backendConfig.isUseDrawerfilteredQuery(eq(DEFAULT_ORG_ID))).thenReturn(true);
+        when(backendConfig.isUseDrawerFilteredQuery(eq(DEFAULT_ORG_ID))).thenReturn(true);
         bgActions = updateAndFetchBehaviorGroupActions(DEFAULT_ORG_ID, bundle.getId(), behaviorGroup.getId(), endpoint1.getId(), endpoint2.getId());
         assertTrue(bgActions.isEmpty());
         when(backendConfig.isDrawerEnabled(eq(DEFAULT_ORG_ID))).thenReturn(true);

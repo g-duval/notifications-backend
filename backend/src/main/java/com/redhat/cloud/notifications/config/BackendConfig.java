@@ -51,7 +51,7 @@ public class BackendConfig {
     private String sourcesOidcAuthToggle;
     private String toggleUseBetaTemplatesEnabled;
     private String showHiddenEventTypesToggle;
-    private String useDrawerfilteredQuery;
+    private String useDrawerFilteredQuery;
 
     @ConfigProperty(name = UNLEASH, defaultValue = "false")
     @Deprecated(forRemoval = true, since = "To be removed when we're done migrating to Unleash in all environments")
@@ -131,7 +131,7 @@ public class BackendConfig {
         sourcesOidcAuthToggle = toggleRegistry.register("sources-oidc-auth", true);
         toggleUseBetaTemplatesEnabled = toggleRegistry.register("use-beta-templates", true);
         showHiddenEventTypesToggle = toggleRegistry.register("show-hidden-event-types", true);
-        useDrawerfilteredQuery = toggleRegistry.register("remove-drawer-endpoint-from-behavior-group", true);
+        useDrawerFilteredQuery = toggleRegistry.register("remove-drawer-endpoint-from-behavior-group", true);
     }
 
     void logConfigAtStartup(@Observes Startup event) {
@@ -153,7 +153,7 @@ public class BackendConfig {
         config.put(UNLEASH, unleashEnabled);
         config.put(sourcesOidcAuthToggle, isSourcesOidcAuthEnabled(null));
         config.put(showHiddenEventTypesToggle, isShowHiddenEventTypes(null));
-        config.put(useDrawerfilteredQuery, isUseDrawerfilteredQuery(null));
+        config.put(useDrawerFilteredQuery, isUseDrawerFilteredQuery(null));
 
         Log.info("=== Startup configuration ===");
         config.forEach((key, value) -> {
@@ -323,9 +323,9 @@ public class BackendConfig {
         }
     }
 
-    public boolean isUseDrawerfilteredQuery(String orgId) {
+    public boolean isUseDrawerFilteredQuery(String orgId) {
         if (unleashEnabled) {
-            return unleash.isEnabled(useDrawerfilteredQuery, buildUnleashContextWithOrgId(orgId), false);
+            return unleash.isEnabled(useDrawerFilteredQuery, buildUnleashContextWithOrgId(orgId), false);
         } else {
             return false;
         }
