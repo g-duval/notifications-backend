@@ -157,8 +157,9 @@ public class EventResource {
             if (!includeActions) {
                 actions = Collections.emptyList();
             } else {
+                boolean drawerEnabled = backendConfig.isDrawerEnabled(orgId);
                 actions = event.getHistoryEntries().stream()
-                    .filter(notificationHistory -> EndpointType.DRAWER != notificationHistory.getEndpointType() || backendConfig.isDrawerEnabled(orgId))
+                    .filter(notificationHistory -> EndpointType.DRAWER != notificationHistory.getEndpointType() || drawerEnabled)
                     .map(historyEntry -> {
                         EventLogEntryAction action = new EventLogEntryAction();
                         action.setId(historyEntry.getId());

@@ -166,7 +166,9 @@ public class BehaviorGroupRepository {
         }
 
         List<BehaviorGroup> behaviorGroups;
-        if (backendConfig.isUseDrawerFilteredQuery(orgId)) {
+        boolean useDrawerFilteredQuery = backendConfig.isUseDrawerFilteredQuery(orgId);
+        boolean drawerEnabled = backendConfig.isDrawerEnabled(orgId);
+        if (useDrawerFilteredQuery) {
             String query = "SELECT DISTINCT b FROM BehaviorGroup b LEFT JOIN FETCH b.actions a " +
                 "LEFT JOIN FETCH a.endpoint e " +
                 "WHERE (b.orgId = :orgId OR b.orgId IS NULL) AND b.bundle.id = :bundleId " +
@@ -177,7 +179,7 @@ public class BehaviorGroupRepository {
                 .setParameter("bundleId", bundleId)
                 .getResultList();
 
-            if (!backendConfig.isDrawerEnabled(orgId)) {
+            if (!drawerEnabled) {
                 for (BehaviorGroup behaviorGroup : behaviorGroups) {
                     if (behaviorGroup.getActions() != null) {
                         behaviorGroup.setActions(
