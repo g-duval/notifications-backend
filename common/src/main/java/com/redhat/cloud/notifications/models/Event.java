@@ -34,21 +34,12 @@ import static java.time.ZoneOffset.UTC;
 @Table(name = "event")
 public class Event {
 
-    public static final String SEVERITY_SORT_EXPRESSION = "CASE e.severity"
-            + " WHEN 'CRITICAL' THEN 0"
-            + " WHEN 'IMPORTANT' THEN 1"
-            + " WHEN 'MODERATE' THEN 2"
-            + " WHEN 'LOW' THEN 3"
-            + " WHEN 'NONE' THEN 4"
-            + " WHEN 'UNDEFINED' THEN 5"
-            + " ELSE 6 END";
-
     public static final Map<String, String> SORT_FIELDS = Map.of(
             "bundle", "e.bundleDisplayName",
             "application", "e.applicationDisplayName",
             "event", "e.eventTypeDisplayName",
             "created", "e.created",
-            "severity", SEVERITY_SORT_EXPRESSION
+            "severity", "e.severityOrder"
     );
 
     @Id
@@ -99,6 +90,9 @@ public class Event {
     @Enumerated(STRING)
     @Column(length = 20)
     private Severity severity;
+
+    @Column(name = "severity_order", insertable = false, updatable = false)
+    private Short severityOrder;
 
     @Transient
     private EventWrapper<?, ?> eventWrapper;
