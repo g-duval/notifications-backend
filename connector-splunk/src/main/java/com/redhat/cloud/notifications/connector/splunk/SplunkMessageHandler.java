@@ -109,6 +109,7 @@ public class SplunkMessageHandler extends MessageHandler {
         try {
             authResult = authenticationLoader.fetchAuthenticationData(notification.getOrgId(), authentication);
         } catch (WebApplicationException | IllegalStateException e) {
+            Log.errorf(e, "Failed to fetch authentication data [orgId=%s]", notification.getOrgId());
             throw new RuntimeException("Error fetching authentication data", e);
         }
 
