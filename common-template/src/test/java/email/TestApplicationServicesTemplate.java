@@ -76,7 +76,6 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
         // Products are in reverse alphabetical order by description to verify sorting
         String json = "{" +
             "\"application-services\":{" +
-            "  \"base_url\":\"https://access.redhat.com/softwareDetail.html?softwareId=\"," +
             "  \"global_releases_number\":2," +
             "  \"products\":{" +
             "    \"zzz-product\":{\"description\":\"Zebra Product\",\"payloads\":[{\"id\":\"1\",\"description\":\"Zebra Release\",\"version\":\"1.0\"}]}," +
@@ -99,7 +98,6 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
     public void testDailyDigestHidesProductsWithNoPayloads() throws JsonProcessingException {
         String json = "{" +
             "\"application-services\":{" +
-            "  \"base_url\":\"https://access.redhat.com/softwareDetail.html?softwareId=\"," +
             "  \"global_releases_number\":1," +
             "  \"products\":{" +
             "    \"keycloak-releases\":{\"description\":\"Red Hat build of Keycloak\",\"payloads\":[]}," +
@@ -117,7 +115,6 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
 
     public static final String JSON_APP_SERVICES_DEFAULT_AGGREGATION_CONTEXT = "{" +
         "   \"application-services\":{" +
-        "      \"base_url\":\"https://access.redhat.com/jbossnetwork/restricted/softwareDetail.html?softwareId=\"," +
         "      \"global_releases_number\":5," +
         "      \"products\":{" +
         "         \"keycloak-releases\":{" +

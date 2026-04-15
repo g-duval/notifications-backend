@@ -14,8 +14,8 @@ public class ApplicationServicesEmailPayloadAggregator extends AbstractEmailPayl
     private static final String EVENTS_KEY = "events";
     private static final String CONTEXT_KEY = "context";
     private static final String PAYLOAD_KEY = "payload";
-    private static final String BASE_URL_KEY = "base_url";
-    private static final String FAMILY_KEY = "family";
+    private static final String SOURCE_KEY = "source";
+    private static final String DISPLAY_NAME_KEY = "display_name";
     private static final String DESCRIPTION_KEY = "description";
     private static final String PAYLOADS_KEY = "payloads";
     private static final String GLOBAL_RELEASES_NUMBER_KEY = "global_releases_number";
@@ -42,19 +42,18 @@ public class ApplicationServicesEmailPayloadAggregator extends AbstractEmailPayl
                 return;
             }
 
-            if (!applicationServices.containsKey(BASE_URL_KEY) && payloadContext.containsKey(BASE_URL_KEY)) {
-                applicationServices.put(BASE_URL_KEY, payloadContext.getString(BASE_URL_KEY));
-            }
-
             if (!products.containsKey(eventType)) {
-                String family = payloadContext.getString(FAMILY_KEY);
-                if (family == null) {
-                    Log.debugf("Skipping Application Services product initialization: missing family for eventType=%s, orgId=%s",
+                JsonObject source = notificationJson.getJsonObject(SOURCE_KEY);
+                String eventTypeDisplayName = source != null && source.getJsonObject(EVENT_TYPE) != null
+                    ? source.getJsonObject(EVENT_TYPE).getString(DISPLAY_NAME_KEY)
+                    : null;
+                if (eventTypeDisplayName == null) {
+                    Log.debugf("Skipping Application Services product initialization: missing event type display name for eventType=%s, orgId=%s",
                         eventType, getOrgId());
                     return;
                 }
                 JsonObject eventTypeObject = new JsonObject();
-                eventTypeObject.put(DESCRIPTION_KEY, family);
+                eventTypeObject.put(DESCRIPTION_KEY, eventTypeDisplayName);
                 eventTypeObject.put(PAYLOADS_KEY, new JsonArray());
                 products.put(eventType, eventTypeObject);
             }
