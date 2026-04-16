@@ -18,6 +18,8 @@ import com.redhat.cloud.notifications.routers.models.EventLogEntryActionStatus;
 import com.redhat.cloud.notifications.routers.models.Meta;
 import com.redhat.cloud.notifications.routers.models.Page;
 import com.redhat.cloud.notifications.routers.models.PageLinksBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -62,6 +64,8 @@ public class EventResource {
     }
 
     public static final String TOTAL_RECIPIENTS = "total_recipients";
+    static final String GET_EVENTS_TIMER_NAME = "notifications.event-log.get-events";
+    static final String NORMALIZED_QUERIES_TAG = "normalized_queries";
 
     @Inject
     BackendConfig backendConfig;
@@ -71,6 +75,9 @@ public class EventResource {
 
     @Inject
     KesselInventoryAuthorization kesselInventoryAuthorization;
+
+    @Inject
+    MeterRegistry meterRegistry;
 
     @GET
     @Produces(APPLICATION_JSON)
@@ -113,11 +120,14 @@ public class EventResource {
         }
 
         String orgId = getOrgId(securityContext);
+        boolean useNormalizedQueries = backendConfig.isNormalizedQueriesEnabled(orgId);
+        Timer.Sample timerSample = Timer.start(meterRegistry);
+
         List<Event> events;
         Long count;
         if (backendConfig.isKesselChecksOnEventLogEnabled(orgId)) {
             Log.info("Check for events with authorization criterion");
-            List<EventAuthorizationCriterion> listEventsAuthCriterion = eventRepository.getEventsWithCriterion(orgId, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet);
+            List<EventAuthorizationCriterion> listEventsAuthCriterion = eventRepository.getEventsWithCriterion(orgId, useNormalizedQueries, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet);
             List<UUID> uuidToExclude = new ArrayList<>();
             Map<Integer, Boolean> criterionResultCache = new HashMap<>();
             for (EventAuthorizationCriterion eventAuthorizationCriterion : listEventsAuthCriterion) {
@@ -133,12 +143,14 @@ public class EventResource {
             if (uuidToExclude.isEmpty()) {
                 uuidToExclude = null;
             }
-            events = eventRepository.getEvents(orgId, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, includeActions, notificationStatusSet, severities, query, Optional.ofNullable(uuidToExclude), true);
-            count = eventRepository.count(orgId, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet, severities, Optional.ofNullable(uuidToExclude), true);
+            events = eventRepository.getEvents(orgId, useNormalizedQueries, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, includeActions, notificationStatusSet, severities, query, Optional.ofNullable(uuidToExclude), true);
+            count = eventRepository.count(orgId, useNormalizedQueries, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet, severities, Optional.ofNullable(uuidToExclude), true);
         } else {
-            events = eventRepository.getEvents(orgId, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, includeActions, notificationStatusSet, severities, query, Optional.empty(), false);
-            count = eventRepository.count(orgId, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet, severities, Optional.empty(), false);
+            events = eventRepository.getEvents(orgId, useNormalizedQueries, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, includeActions, notificationStatusSet, severities, query, Optional.empty(), false);
+            count = eventRepository.count(orgId, useNormalizedQueries, bundleIds, appIds, eventTypeDisplayName, startDate, endDate, basicTypes, compositeTypes, invocationResults, notificationStatusSet, severities, Optional.empty(), false);
         }
+
+        timerSample.stop(meterRegistry.timer(GET_EVENTS_TIMER_NAME, NORMALIZED_QUERIES_TAG, String.valueOf(useNormalizedQueries)));
         if (events.isEmpty()) {
             Meta meta = new Meta();
             meta.setCount(0L);
