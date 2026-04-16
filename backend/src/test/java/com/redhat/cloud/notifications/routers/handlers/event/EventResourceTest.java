@@ -1314,7 +1314,7 @@ public class EventResourceTest extends DbIsolatedTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void testGetEventsTimerMetric(boolean useNormalizedQueries) {
+    void shouldIncrementTimerCountForEachGetEventsRequest(boolean useNormalizedQueries) {
         when(backendConfig.isNormalizedQueriesEnabled(anyString())).thenReturn(useNormalizedQueries);
 
         String tagValue = String.valueOf(useNormalizedQueries);
