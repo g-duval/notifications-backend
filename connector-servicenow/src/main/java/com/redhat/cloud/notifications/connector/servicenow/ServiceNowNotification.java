@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotNull;
 @RegisterForReflection
 public class ServiceNowNotification extends NotificationToConnector {
 
-    @NotNull
     @JsonProperty("account_id")
     public String accountId;
 
