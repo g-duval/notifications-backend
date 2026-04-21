@@ -17,14 +17,10 @@ public class InstantLabelMapping {
     public static InstantTemplateDetails buildInstantNotificationDescription(final String bundleName, final String applicationName, final String eventTypeName) {
         InstantTemplateDetails instantLabels = INSTANT_NOTIFICATION;
         if (Rhel.BUNDLE_NAME.equals(bundleName)) {
-            if (Rhel.LIFECYCLE_APP_NAME.equals(applicationName)) {
-                if (Rhel.RETIRING_LIFECYCLE.equals(eventTypeName)) {
-                    instantLabels = MONTHLY_NOTIFICATION;
-                }
-            } else if (Rhel.ROADMAP_APP_NAME.equals(applicationName)) {
-                if (Rhel.ROADMAP_MONTHLY_REPORT.equals(eventTypeName)) {
-                    instantLabels = MONTHLY_NOTIFICATION;
-                }
+            if (Rhel.LIFECYCLE_APP_NAME.equals(applicationName) && Rhel.RETIRING_LIFECYCLE.equals(eventTypeName)) {
+                instantLabels = MONTHLY_NOTIFICATION;
+            } else if (Rhel.ROADMAP_APP_NAME.equals(applicationName) && Rhel.ROADMAP_MONTHLY_REPORT.equals(eventTypeName)) {
+                instantLabels = MONTHLY_NOTIFICATION;
             }
         }
         return instantLabels;
