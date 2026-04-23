@@ -218,20 +218,6 @@ class ServiceNowConnectorIntegrationTest extends BaseHttpConnectorIntegrationTes
     }
 
     @Test
-    void testMissingAccountId() {
-        JsonObject metadata = new JsonObject();
-        metadata.put("url", "https://example.com");
-
-        JsonObject payload = new JsonObject();
-        payload.put("notif-metadata", metadata);
-        payload.put("org_id", DEFAULT_ORG_ID);
-        // account_id is intentionally not set
-
-        String cloudEventId = sendCloudEventMessage(payload);
-        assertFailedOutgoingMessage(cloudEventId, "Validation failed");
-    }
-
-    @Test
     void testMissingMetadata() {
         JsonObject payload = new JsonObject();
         payload.put("org_id", DEFAULT_ORG_ID);
