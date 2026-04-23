@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import static com.redhat.cloud.notifications.connector.servicenow.ServiceNowMessageHandler.NOTIF_METADATA;
-import static com.redhat.cloud.notifications.connector.servicenow.ServiceNowMessageHandler.URL_KEY;
+import static com.redhat.cloud.notifications.connector.servicenow.ServiceNowNotification.URL_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

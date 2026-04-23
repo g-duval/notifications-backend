@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.redhat.cloud.notifications.connector.authentication.v2.AuthenticationType.SECRET_TOKEN;
+import static com.redhat.cloud.notifications.connector.servicenow.ServiceNowNotification.URL_KEY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @ApplicationScoped
@@ -32,7 +33,6 @@ public class ServiceNowMessageHandler extends MessageHandler {
 
     public static final String JSON_UTF8 = "application/json; charset=utf-8";
     static final String NOTIF_METADATA = "notif-metadata";
-    static final String URL_KEY = "url";
     static final String AUTHENTICATION_KEY = "authentication";
     static final String USERNAME = "rh_insights_integration";
 
@@ -51,23 +51,21 @@ public class ServiceNowMessageHandler extends MessageHandler {
 
         final ServiceNowNotification notification = getAndValidateNotification(incomingCloudEvent);
 
-        final String targetUrl = notification.metadata.getString(URL_KEY);
-
         final Optional<String> authorizationHeader = fetchOptionalAuthorizationHeader(notification, incomingCloudEvent);
 
         final String payload = buildPayload(incomingCloudEvent);
 
         HandledHttpMessageDetails handledMessageDetails = new HandledHttpMessageDetails();
-        handledMessageDetails.targetUrl = targetUrl;
+        handledMessageDetails.targetUrl = notification.getTargetUrl();
 
         try (Response response = authorizationHeader.isPresent()
-                ? serviceNowRestClient.postWithBasicAuth(authorizationHeader.get(), targetUrl, payload)
-                : serviceNowRestClient.post(targetUrl, payload)) {
+                ? serviceNowRestClient.postWithBasicAuth(authorizationHeader.get(), notification.getTargetUrl(), payload)
+                : serviceNowRestClient.post(notification.getTargetUrl(), payload)) {
             handledMessageDetails.httpStatus = response.getStatus();
         }
 
         Log.infof("Delivered event %s (orgId %s account %s) to %s",
-            incomingCloudEvent.getId(), notification.getOrgId(), notification.accountId, targetUrl);
+            incomingCloudEvent.getId(), notification.getOrgId(), notification.accountId, notification.getTargetUrl());
 
         return handledMessageDetails;
     }
@@ -121,18 +119,20 @@ public class ServiceNowMessageHandler extends MessageHandler {
                 violations);
         }
 
-        String targetUrl = notification.metadata.getString(URL_KEY);
-        if (targetUrl == null || targetUrl.isEmpty()) {
-            throw new IllegalArgumentException(
-                String.format("Missing or empty 'url' in notification metadata [orgId=%s, historyId=%s]",
-                    notification.getOrgId(), incomingCloudEvent.getId()));
-        }
-        validateTargetUrl(targetUrl);
+        validateTargetUrl(notification, incomingCloudEvent.getId());
 
         return notification;
     }
 
-    static void validateTargetUrl(String targetUrl) {
+    static void validateTargetUrl(ServiceNowNotification notification, String historyId) {
+        final String targetUrl = notification.metadata.getString(URL_KEY);
+
+        if (targetUrl == null || targetUrl.isEmpty()) {
+            throw new IllegalArgumentException(
+                String.format("Missing or empty 'url' in notification metadata [orgId=%s, historyId=%s]",
+                    notification.getOrgId(), historyId));
+        }
+
         try {
             URI uri = new URI(targetUrl);
             String scheme = uri.getScheme();

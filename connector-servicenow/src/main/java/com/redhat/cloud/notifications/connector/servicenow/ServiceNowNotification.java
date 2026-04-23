@@ -9,10 +9,16 @@ import jakarta.validation.constraints.NotNull;
 @RegisterForReflection
 public class ServiceNowNotification extends NotificationToConnector {
 
+    static final String URL_KEY = "url";
+
     @JsonProperty("account_id")
     public String accountId;
 
     @NotNull
     @JsonProperty("notif-metadata")
     public JsonObject metadata;
+
+    public String getTargetUrl() {
+        return metadata.getString(URL_KEY);
+    }
 }

@@ -9,6 +9,8 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 
+import static com.redhat.cloud.notifications.connector.servicenow.ServiceNowNotification.URL_KEY;
+
 @ApplicationScoped
 @Alternative
 @Priority(0)
@@ -22,7 +24,7 @@ public class ServiceNowExceptionHandler extends HttpExceptionHandler {
             if (data != null) {
                 Object metadataObj = data.getValue(ServiceNowMessageHandler.NOTIF_METADATA);
                 if (metadataObj instanceof JsonObject metadata) {
-                    httpDetails.targetUrl = metadata.getString(ServiceNowMessageHandler.URL_KEY);
+                    httpDetails.targetUrl = metadata.getString(URL_KEY);
                 }
             }
         }
