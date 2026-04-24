@@ -1,0 +1,27 @@
+[
+  {
+    "username": "a",
+    "org-id": "12345",
+    "notification_category": "rhbk"
+  },
+  {
+    "username": "a",
+    "org-id": "12345",
+    "notification_category": "appplatform"
+  },
+  {
+    "username": "b",
+    "org-id": "12345",
+    "notification_category": "rhbk"
+  },
+  {
+    "username": "c",
+    "org-id": "12345",
+    "notification_category": "data-grid"
+  },
+  {
+    "username": "d",
+    "org-id": "12345",
+    "notification_category": "redhat-quarkus"
+  }
+]
