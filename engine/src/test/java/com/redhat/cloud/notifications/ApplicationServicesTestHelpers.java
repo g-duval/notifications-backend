@@ -22,9 +22,7 @@ public class ApplicationServicesTestHelpers {
     public static final String BUNDLE = "subscription-services";
     public static final String APPLICATION = "application-services";
 
-    public static final String BASE_URL = "https://access.redhat.com/jbossnetwork/restricted/softwareDetail.html?softwareId=";
-
-    public static Action createApplicationServicesAction(String eventType, String family, List<Event> events) {
+    public static Action createApplicationServicesAction(String eventType, List<Event> events) {
         Action action = new Action();
         action.setBundle(BUNDLE);
         action.setApplication(APPLICATION);
@@ -34,8 +32,6 @@ public class ApplicationServicesTestHelpers {
 
         action.setContext(
             new Context.ContextBuilder()
-                .withAdditionalProperty("base_url", BASE_URL)
-                .withAdditionalProperty("family", family)
                 .build()
         );
 
@@ -49,7 +45,6 @@ public class ApplicationServicesTestHelpers {
     public static Action createKeycloakReleasesAction() {
         return createApplicationServicesAction(
             "keycloak-releases",
-            "Red Hat build of Keycloak",
             List.of(
                 new Event.EventBuilder()
                     .withMetadata(new Metadata.MetadataBuilder().build())
@@ -78,7 +73,6 @@ public class ApplicationServicesTestHelpers {
     public static Action createEapReleasesAction() {
         return createApplicationServicesAction(
             "eap-releases",
-            "Red Hat JBoss Enterprise Application Platform",
             List.of(
                 new Event.EventBuilder()
                     .withMetadata(new Metadata.MetadataBuilder().build())
@@ -153,7 +147,6 @@ public class ApplicationServicesTestHelpers {
 
         action.setContext(
             new Context.ContextBuilder()
-                .withAdditionalProperty("base_url", BASE_URL)
                 .build()
         );
 
@@ -180,9 +173,10 @@ public class ApplicationServicesTestHelpers {
         // Build JSON directly because BaseTransformer cannot serialize null payloads
         JsonObject payload = new JsonObject();
         payload.put("event_type", "keycloak-releases");
-        payload.put("context", new JsonObject()
-            .put("base_url", BASE_URL)
-            .put("family", "Red Hat build of Keycloak"));
+        payload.put("context", new JsonObject());
+        payload.put("source", new JsonObject()
+            .put("event_type", new JsonObject()
+                .put("display_name", "Red Hat build of Keycloak")));
         payload.put("events", new JsonArray()
             .add(new JsonObject().put("payload", new JsonObject()
                 .put("id", "108766")
@@ -201,7 +195,6 @@ public class ApplicationServicesTestHelpers {
     public static Action createActionWithEmptyEvents() {
         return createApplicationServicesAction(
             "keycloak-releases",
-            "Red Hat build of Keycloak",
             List.of()
         );
     }
@@ -216,7 +209,6 @@ public class ApplicationServicesTestHelpers {
 
         action.setContext(
             new Context.ContextBuilder()
-                .withAdditionalProperty("base_url", BASE_URL)
                 .build()
         );
 
@@ -239,11 +231,15 @@ public class ApplicationServicesTestHelpers {
         return action;
     }
 
+    public static EmailAggregation createEmailAggregation(Action action, String eventTypeDisplayName) {
+        return TestHelpers.createEmailAggregationFromAction(action, eventTypeDisplayName);
+    }
+
     public static Map<String, Object> buildApplicationServicesAggregatedPayload() {
         ApplicationServicesEmailPayloadAggregator aggregator = new ApplicationServicesEmailPayloadAggregator();
 
-        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(createKeycloakReleasesAction()));
-        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(createEapReleasesAction()));
+        aggregator.aggregate(createEmailAggregation(createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(createEmailAggregation(createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
 
         return aggregator.getContext();
     }

@@ -72,11 +72,28 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
     }
 
     @Test
+    public void testDailyDigestSingularRelease() throws JsonProcessingException {
+        String json = "{" +
+            "\"application-services\":{" +
+            "  \"global_releases_number\":1," +
+            "  \"products\":{" +
+            "    \"keycloak-releases\":{\"description\":\"Red Hat build of Keycloak\",\"payloads\":[{\"id\":\"108766\",\"description\":\"Red Hat build of Keycloak 26.2.13 Maven Repository\",\"version\":\"26.2.13\"}]}" +
+            "  }" +
+            "}," +
+            "\"start_time\":null,\"end_time\":null" +
+            "}";
+
+        final String result = generateAggregatedEmailBody(json, false);
+
+        assertTrue(result.contains("There is 1 Red Hat build of Keycloak release affecting your subscriptions."));
+        assertFalse(result.contains("There are 1"));
+    }
+
+    @Test
     public void testDailyDigestSortsProductsByDescription() throws JsonProcessingException {
         // Products are in reverse alphabetical order by description to verify sorting
         String json = "{" +
             "\"application-services\":{" +
-            "  \"base_url\":\"https://access.redhat.com/softwareDetail.html?softwareId=\"," +
             "  \"global_releases_number\":2," +
             "  \"products\":{" +
             "    \"zzz-product\":{\"description\":\"Zebra Product\",\"payloads\":[{\"id\":\"1\",\"description\":\"Zebra Release\",\"version\":\"1.0\"}]}," +
@@ -99,7 +116,6 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
     public void testDailyDigestHidesProductsWithNoPayloads() throws JsonProcessingException {
         String json = "{" +
             "\"application-services\":{" +
-            "  \"base_url\":\"https://access.redhat.com/softwareDetail.html?softwareId=\"," +
             "  \"global_releases_number\":1," +
             "  \"products\":{" +
             "    \"keycloak-releases\":{\"description\":\"Red Hat build of Keycloak\",\"payloads\":[]}," +
@@ -115,9 +131,27 @@ public class TestApplicationServicesTemplate extends EmailTemplatesRendererHelpe
         assertTrue(result.contains("Red Hat JBoss Enterprise Application Platform (1)"), "Products with payloads should appear");
     }
 
+    @Test
+    public void testDailyDigestWithAllProductsEmpty() throws JsonProcessingException {
+        String json = "{" +
+            "\"application-services\":{" +
+            "  \"global_releases_number\":0," +
+            "  \"products\":{" +
+            "    \"keycloak-releases\":{\"description\":\"Red Hat build of Keycloak\",\"payloads\":[]}," +
+            "    \"eap-releases\":{\"description\":\"Red Hat JBoss Enterprise Application Platform\",\"payloads\":[]}" +
+            "  }" +
+            "}," +
+            "\"start_time\":null,\"end_time\":null" +
+            "}";
+
+        final String result = generateAggregatedEmailBody(json, false);
+
+        assertFalse(result.contains("application-services-section1-1"), "No product sections should be rendered");
+        assertTrue(result.contains("Application Services Releases"), "Title should still be present");
+    }
+
     public static final String JSON_APP_SERVICES_DEFAULT_AGGREGATION_CONTEXT = "{" +
         "   \"application-services\":{" +
-        "      \"base_url\":\"https://access.redhat.com/jbossnetwork/restricted/softwareDetail.html?softwareId=\"," +
         "      \"global_releases_number\":5," +
         "      \"products\":{" +
         "         \"keycloak-releases\":{" +

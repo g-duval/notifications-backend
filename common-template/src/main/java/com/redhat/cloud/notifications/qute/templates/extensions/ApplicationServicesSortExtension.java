@@ -8,19 +8,31 @@ import java.util.Map;
 
 public class ApplicationServicesSortExtension {
 
-    /* Sort products map entries alphabetically by their "description" field */
     @TemplateExtension
-    public static List<Map.Entry<String, Map<String, Object>>> sortByDescription(Map<String, Map<String, Object>> products) {
+    public static List<Map.Entry<String, Map<String, Object>>> sortByProductDescription(Map<String, Map<String, Object>> products) {
         if (products == null) {
             return List.of();
         }
         List<Map.Entry<String, Map<String, Object>>> entries = new ArrayList<>(products.entrySet());
-        entries.sort(Comparator.comparing(entry -> extractDescription(entry.getValue())));
+        entries.sort(Comparator.comparing(entry -> extractField(entry.getValue(), "description")));
         return entries;
     }
 
-    private static String extractDescription(Map<String, Object> value) {
-        Object desc = value.get("description");
-        return desc != null ? desc.toString() : "";
+    @TemplateExtension
+    public static List<Map<String, Object>> sortByEventTypeDisplayName(List<Map<String, Object>> eventTypes) {
+        if (eventTypes == null) {
+            return List.of();
+        }
+        List<Map<String, Object>> sorted = new ArrayList<>(eventTypes);
+        sorted.sort(Comparator.comparing(entry -> extractField(entry, "display_name")));
+        return sorted;
+    }
+
+    private static String extractField(Map<String, Object> value, String field) {
+        if (value == null) {
+            return "";
+        }
+        Object val = value.get(field);
+        return val != null ? val.toString() : "";
     }
 }

@@ -4,7 +4,7 @@
 {@boolean renderButtonSection3=false}
 {@boolean renderCustomLinks=true}
 {@boolean renderTitleRightPart=true}
-{#let sortedProducts=action.context.application-services.products.sortByDescription}
+{#let sortedProducts=action.context.application-services.products.sortByProductDescription}
 {#include email/Common/insightsEmailBodyLight}
 {#content-render-custom-links-section}
     {#each sortedProducts}
@@ -53,7 +53,7 @@
             <tbody>
                 {#each sub-section-product-releases}
                 <tr style="font-size: 14px;">
-                    <td style="{body-section-table-td-style}"><a style="{body-section-table-td-a-style}" href="{action.context.application-services.base_url}{it.id}" target="_blank">{it.description}</a></td>
+                    <td style="{body-section-table-td-style}"><a style="{body-section-table-td-a-style}" href="https://access.redhat.com/jbossnetwork/restricted/softwareDetail.html?softwareId={it.id}" target="_blank">{it.description}</a></td>
                     <td style="{body-section-table-td-style}">{it.version}</td>
                 </tr>
                 {/each}
