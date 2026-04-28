@@ -2,27 +2,19 @@ package com.redhat.cloud.notifications.cloudevent.transformers;
 
 import com.redhat.cloud.notifications.events.EventWrapperCloudEvent;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
-import java.util.Locale;
 import java.util.Optional;
 
 @ApplicationScoped
 public class CloudEventTransformerFactory {
 
-    private static final String POLICIES_POLICY_TRIGGERED_TYPE = "com.redhat.console.insights.policies.policy-triggered";
-    @Inject
-    PolicyTriggeredCloudEventTransformer policyTriggeredCloudEventTransformer;
-
     /**
-     * Returns a CloudEventTransformer if the transforming is supported
+     * Returns a CloudEventTransformer if one is registered for the given cloud event type.
+     * Currently no transformers are registered (PolicyTriggeredCloudEventTransformer was removed
+     * as part of the rhel/policies cleanup). Callers in EventConsumer and ReplayResource will
+     * skip the transformation branch until a new transformer is added.
      */
     public Optional<CloudEventTransformer> getTransformerIfSupported(EventWrapperCloudEvent cloudEvent) {
-        switch (cloudEvent.getEvent().getType().toLowerCase(Locale.ROOT)) {
-            case POLICIES_POLICY_TRIGGERED_TYPE:
-                return Optional.of(policyTriggeredCloudEventTransformer);
-            default:
-                return Optional.empty();
-        }
+        return Optional.empty();
     }
 }
