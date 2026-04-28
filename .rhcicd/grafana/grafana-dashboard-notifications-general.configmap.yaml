@@ -7816,7 +7816,7 @@ data:
         "instant": false,
         "legendFormat": "Success",
         "range": true,
-        "refId": "Success"
+        "refId": "Success (old)"
        },
        {
         "datasource": {
@@ -7829,7 +7829,7 @@ data:
         "interval": "",
         "legendFormat": "Failure",
         "range": true,
-        "refId": "Failure"
+        "refId": "Failure (old)"
        },
        {
         "datasource": {
@@ -7845,6 +7845,32 @@ data:
         "legendFormat": "Retry",
         "range": true,
         "refId": "Retry"
+       },
+       {
+        "datasource": {
+         "uid": "$datasource"
+        },
+        "editorMode": "code",
+        "exemplar": false,
+        "expr": "sum(increase(notifications_connector_messages_succeeded_total{connector=\"servicenow\"}[5m]))",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "Success",
+        "range": true,
+        "refId": "Success"
+       },
+       {
+        "datasource": {
+         "uid": "$datasource"
+        },
+        "editorMode": "code",
+        "exemplar": false,
+        "expr": "sum(increase(notifications_connector_messages_failed_total{connector=\"servicenow\"}[5m]))",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "Failure",
+        "range": true,
+        "refId": "Failure"
        }
       ],
       "title": "ServiceNow",
@@ -10403,7 +10429,7 @@ data:
     "timezone": "",
     "title": "Notifications Dashboard",
     "uid": "KQIVyFuMk",
-    "version": 5
+    "version": 6
    }
 kind: ConfigMap
 metadata:
