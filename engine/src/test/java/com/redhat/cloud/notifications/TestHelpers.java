@@ -609,10 +609,25 @@ public class TestHelpers {
      * @return the {@link JsonObject} representation of the wrapped action.
      */
     public static JsonObject wrapActionToJsonObject(final Action action) {
+        return wrapActionToJsonObject(action, null);
+    }
+
+    public static JsonObject wrapActionToJsonObject(final Action action, final String eventTypeDisplayName) {
         com.redhat.cloud.notifications.models.Event event = new com.redhat.cloud.notifications.models.Event();
         event.setEventWrapper(new EventWrapperAction(action));
-
+        if (eventTypeDisplayName != null) {
+            event.setEventTypeDisplayName(eventTypeDisplayName);
+        }
         return new BaseTransformer().toJsonObject(event);
+    }
+
+    public static EmailAggregation createEmailAggregationFromAction(Action emailActionMessage, String eventTypeDisplayName) {
+        EmailAggregation aggregation = new EmailAggregation();
+        aggregation.setBundleName(emailActionMessage.getBundle());
+        aggregation.setApplicationName(emailActionMessage.getApplication());
+        aggregation.setOrgId(emailActionMessage.getOrgId());
+        aggregation.setPayload(TestHelpers.wrapActionToJsonObject(emailActionMessage, eventTypeDisplayName));
+        return aggregation;
     }
 
     public static NotificationsConsoleCloudEvent createConsoleCloudEvent() throws IOException {
