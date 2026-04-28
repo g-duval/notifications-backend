@@ -6,14 +6,12 @@ import com.redhat.cloud.notifications.ingress.Event;
 import com.redhat.cloud.notifications.ingress.Metadata;
 import com.redhat.cloud.notifications.ingress.Payload;
 import com.redhat.cloud.notifications.models.EmailAggregation;
-import com.redhat.cloud.notifications.processors.email.aggregators.ApplicationServicesEmailPayloadAggregator;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static com.redhat.cloud.notifications.TestConstants.DEFAULT_ORG_ID;
 
@@ -229,18 +227,5 @@ public class ApplicationServicesTestHelpers {
         action.setOrgId(DEFAULT_ORG_ID);
 
         return action;
-    }
-
-    public static EmailAggregation createEmailAggregation(Action action, String eventTypeDisplayName) {
-        return TestHelpers.createEmailAggregationFromAction(action, eventTypeDisplayName);
-    }
-
-    public static Map<String, Object> buildApplicationServicesAggregatedPayload() {
-        ApplicationServicesEmailPayloadAggregator aggregator = new ApplicationServicesEmailPayloadAggregator();
-
-        aggregator.aggregate(createEmailAggregation(createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
-        aggregator.aggregate(createEmailAggregation(createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
-
-        return aggregator.getContext();
     }
 }

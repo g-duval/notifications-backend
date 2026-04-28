@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static com.redhat.cloud.notifications.ApplicationServicesTestHelpers.createEmailAggregation;
 import static com.redhat.cloud.notifications.TestConstants.DEFAULT_ORG_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,13 +28,13 @@ class ApplicationServicesEmailPayloadAggregatorTest {
 
     @Test
     void shouldSetOrgId() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
         assertEquals(DEFAULT_ORG_ID, aggregator.getOrgId());
     }
 
     @Test
     void shouldAggregateKeycloakReleases() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
 
         Map<String, Object> context = aggregator.getContext();
         JsonObject appServices = JsonObject.mapFrom(context).getJsonObject("application-services");
@@ -55,8 +54,8 @@ class ApplicationServicesEmailPayloadAggregatorTest {
 
     @Test
     void shouldAggregateMultipleProducts() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
 
         Map<String, Object> context = aggregator.getContext();
         JsonObject appServices = JsonObject.mapFrom(context).getJsonObject("application-services");
@@ -71,8 +70,8 @@ class ApplicationServicesEmailPayloadAggregatorTest {
 
     @Test
     void shouldCalculateGlobalReleasesNumber() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
 
         Map<String, Object> context = aggregator.getContext();
         JsonObject appServices = JsonObject.mapFrom(context).getJsonObject("application-services");
@@ -118,7 +117,7 @@ class ApplicationServicesEmailPayloadAggregatorTest {
 
     @Test
     void shouldHandleEmptyEvents() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createActionWithEmptyEvents(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createActionWithEmptyEvents(), "Red Hat build of Keycloak"));
 
         Map<String, Object> context = aggregator.getContext();
         JsonObject appServices = JsonObject.mapFrom(context).getJsonObject("application-services");
@@ -131,8 +130,8 @@ class ApplicationServicesEmailPayloadAggregatorTest {
 
     @Test
     void shouldReturnConsistentContextOnMultipleCalls() {
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createEapReleasesAction(), "Red Hat JBoss Enterprise Application Platform"));
 
         Map<String, Object> context1 = aggregator.getContext();
         Map<String, Object> context2 = aggregator.getContext();
@@ -162,8 +161,8 @@ class ApplicationServicesEmailPayloadAggregatorTest {
     @Test
     void shouldAccumulatePayloadsForSameEventType() {
         // Aggregate keycloak twice - payloads should accumulate
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
-        aggregator.aggregate(createEmailAggregation(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
+        aggregator.aggregate(TestHelpers.createEmailAggregationFromAction(ApplicationServicesTestHelpers.createKeycloakReleasesAction(), "Red Hat build of Keycloak"));
 
         Map<String, Object> context = aggregator.getContext();
         JsonObject appServices = JsonObject.mapFrom(context).getJsonObject("application-services");
