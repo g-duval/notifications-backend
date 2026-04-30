@@ -304,6 +304,8 @@ public class UserConfigResource {
         if (backendConfig.isUseCommonTemplateModuleForUserPrefApisToggle()) {
             if (!backendConfig.isDrawerEnabled(orgId) && subscriptionType == DRAWER) {
                 supported = false;
+            } else if (subscriptionType == DRAWER && !eventType.isIncludedInDrawer()) {
+                return false;
             } else {
                 boolean canUseTemplateBetaVersion = backendConfig.isUseBetaTemplatesEnabled(orgId);
                 TemplateDefinition templateDefinition = getTemplateDefinition(bundleName, applicationName, eventType.getName(), subscriptionType, canUseTemplateBetaVersion);
