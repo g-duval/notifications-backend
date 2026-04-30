@@ -254,6 +254,9 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
         assertNull(rhelAdvisor, "RHEL advisor found");
 
         updateEventTypeVisibility(eventType, true);
+        if (backendConfig.isDrawerEnabled(orgId)) {
+            updateEventTypeIncludedInDrawer(eventType, true);
+        }
         settingsValuesByEventType = given()
             .header(identityHeader)
             .queryParam("bundleName", bundle)
@@ -371,6 +374,7 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
 
         // check for app without daily digest
         UUID malwareEventTypeId = resourceHelpers.createEventType(bundle, MALWARE_APP_NAME, MALWARE_DETECTED_MALWARE);
+        updateEventTypeIncludedInDrawer(MALWARE_DETECTED_MALWARE, true);
         SettingsValueByEventTypeJsonForm settingsValueJsonForm = given()
             .header(identityHeader)
             .when().get(PATH_EVENT_TYPE_PREFERENCE_API)
@@ -397,6 +401,9 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
         // Skip the application if there are no supported types
         final String APP_WITHOUT_TEMPLATE = "app-without-template";
         resourceHelpers.createEventType(bundle, APP_WITHOUT_TEMPLATE, MALWARE_DETECTED_MALWARE);
+        if (backendConfig.isDrawerEnabled(orgId)) {
+            updateEventTypeIncludedInDrawer(MALWARE_DETECTED_MALWARE, true);
+        }
 
         settingsValueJsonForm = given()
             .header(identityHeader)
@@ -408,7 +415,7 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
         rhelMalware = rhelAppForm(settingsValueJsonForm, APP_WITHOUT_TEMPLATE);
 
         if (backendConfig.isDrawerEnabled(orgId)) {
-            // drawer type will be always supported
+            // drawer type is supported when event type is included in drawer
             assertNotNull(rhelMalware);
             assertEquals(1, settingsValueJsonForm.bundles.size());
             notificationPreferenes = extractNotificationValues(rhelMalware.eventTypes, bundle, APP_WITHOUT_TEMPLATE, MALWARE_DETECTED_MALWARE);
@@ -418,7 +425,8 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
             assertEquals(0, settingsValueJsonForm.bundles.size());
         }
 
-        // Restore event type visibility
+        // Restore event type state
+        updateEventTypeIncludedInDrawer(eventType, false);
         updateEventTypeVisibility(eventType, true);
         // delete malware app
         UUID malwareAppId = applicationRepository.getApplication(bundle, MALWARE_APP_NAME).getId();
@@ -455,6 +463,14 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
         if (backendConfig.isDrawerEnabled(orgId)) {
             assertEquals(expectedResult.contains(DRAWER), notificationPreferences.get(DRAWER));
         }
+    }
+
+    @Transactional
+    void updateEventTypeIncludedInDrawer(String eventTypeName, boolean includedInDrawer) {
+        entityManager.createQuery("UPDATE EventType SET includedInDrawer = :includedInDrawer where name = :name")
+            .setParameter("includedInDrawer", includedInDrawer)
+            .setParameter("name", eventTypeName)
+            .executeUpdate();
     }
 
     @Transactional
@@ -551,6 +567,7 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
 
         // Create the event type in the database
         UUID malwareEventTypeId = resourceHelpers.createEventType(bundle, application, eventType);
+        updateEventTypeIncludedInDrawer(eventType, true);
 
         // Test org-with-drawer-enabled sees DRAWER
         String identityHeaderValueEnabled = TestHelpers.encodeRHIdentityInfo("account-1", ORG_WITH_DRAWER_ENABLED, "user-enabled");
@@ -595,6 +612,41 @@ public class UserConfigResourceTemplateModuleTest extends DbIsolatedTest {
             malwareAppDisabled.eventTypes, bundle, application, eventType
         );
         assertFalse(notifValuesDisabled.containsKey(DRAWER), "org-with-drawer-disabled should NOT have DRAWER option");
+
+        // Cleanup
+        applicationRepository.deleteEventTypeById(malwareEventTypeId);
+    }
+
+    @Test
+    void testDrawerNotSupportedWhenEventTypeNotIncludedInDrawer() {
+        when(backendConfig.isDrawerEnabled(anyString())).thenReturn(true);
+
+        String bundle = BUNDLE_NAME;
+        String application = MALWARE_APP_NAME;
+        String eventType = MALWARE_DETECTED_MALWARE;
+
+        UUID malwareEventTypeId = resourceHelpers.createEventType(bundle, application, eventType);
+
+        String identityHeaderValue = TestHelpers.encodeRHIdentityInfo("account-1", "org-drawer-test", "user1");
+        Header identityHeader = TestHelpers.createRHIdentityHeader(identityHeaderValue);
+        MockServerConfig.addMockRbacAccess(identityHeaderValue, MockServerConfig.RbacAccess.FULL_ACCESS);
+
+        SettingsValueByEventTypeJsonForm settings = given()
+            .header(identityHeader)
+            .queryParam("bundleName", bundle)
+            .when().get(PATH_EVENT_TYPE_PREFERENCE_API)
+            .then()
+            .statusCode(200)
+            .contentType(JSON)
+            .extract().body().as(SettingsValueByEventTypeJsonForm.class);
+
+        SettingsValueByEventTypeJsonForm.Application malwareApp = settings.bundles.get(bundle).applications.get(application);
+        assertNotNull(malwareApp, "Malware app should be present");
+        Map<SubscriptionType, Boolean> notifValues = extractNotificationValues(
+            malwareApp.eventTypes, bundle, application, eventType
+        );
+        assertFalse(notifValues.containsKey(DRAWER), "DRAWER should not be available when event type is not included in drawer");
+        assertTrue(notifValues.containsKey(INSTANT), "INSTANT should still be available");
 
         // Cleanup
         applicationRepository.deleteEventTypeById(malwareEventTypeId);

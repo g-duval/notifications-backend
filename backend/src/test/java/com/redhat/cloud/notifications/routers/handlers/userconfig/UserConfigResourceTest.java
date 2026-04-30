@@ -551,6 +551,9 @@ public class UserConfigResourceTest extends DbIsolatedTest {
 
         // Event should be returned because it is visible
         updateEventTypeVisibility(eventType, true);
+        if (backendConfig.isDrawerEnabled(orgId)) {
+            updateEventTypeIncludedInDrawer(eventType, true);
+        }
         settingsValuesByEventType = given()
             .header(identityHeader)
             .queryParam("bundleName", bundle)
@@ -813,6 +816,14 @@ public class UserConfigResourceTest extends DbIsolatedTest {
         if (backendConfig.isDrawerEnabled(orgId)) {
             assertEquals(expectedResult.contains(DRAWER), notificationPreferences.get(DRAWER));
         }
+    }
+
+    @Transactional
+    void updateEventTypeIncludedInDrawer(String eventTypeName, boolean includedInDrawer) {
+        entityManager.createQuery("UPDATE EventType SET includedInDrawer = :includedInDrawer where name = :name")
+            .setParameter("includedInDrawer", includedInDrawer)
+            .setParameter("name", eventTypeName)
+            .executeUpdate();
     }
 
     @Transactional
