@@ -305,7 +305,7 @@ public class UserConfigResource {
             if (!backendConfig.isDrawerEnabled(orgId) && subscriptionType == DRAWER) {
                 supported = false;
             } else if (subscriptionType == DRAWER && !eventType.isIncludedInDrawer()) {
-                return false;
+                supported = false;
             } else {
                 boolean canUseTemplateBetaVersion = backendConfig.isUseBetaTemplatesEnabled(orgId);
                 TemplateDefinition templateDefinition = getTemplateDefinition(bundleName, applicationName, eventType.getName(), subscriptionType, canUseTemplateBetaVersion);
