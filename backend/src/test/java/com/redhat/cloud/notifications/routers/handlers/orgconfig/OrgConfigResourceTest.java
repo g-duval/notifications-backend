@@ -41,6 +41,7 @@ import static com.redhat.cloud.notifications.auth.kessel.permission.WorkspacePer
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -81,6 +82,7 @@ class OrgConfigResourceTest extends DbIsolatedTest {
     static final LocalTime TIME = LocalTime.of(10, 00);
 
     public static final String ORG_CONFIG_NOTIFICATION_DAILY_DIGEST_TIME_PREFERENCE_URL = "/org-config/daily-digest/time-preference";
+    public static final String DIGEST_SUBSCRIPTION_URL = "/org-config/digest-subscription/";
     String identityHeaderValue = TestHelpers.encodeRHIdentityInfo(DEFAULT_ACCOUNT_ID, DEFAULT_ORG_ID, DEFAULT_USER);
     Header identityHeader = TestHelpers.createRHIdentityHeader(identityHeaderValue);
 
@@ -93,10 +95,11 @@ class OrgConfigResourceTest extends DbIsolatedTest {
         MockServerConfig.addMockRbacAccess(identityHeaderValue, MockServerConfig.RbacAccess.FULL_ACCESS);
         MockServerConfig.addMockRbacAccess(testMinIdentityHeaderValue, MockServerConfig.RbacAccess.FULL_ACCESS);
 
-        // Clean up the aggregations since we are using the "DEFAULT_*"
-        // organizations.
         this.entityManager
             .createQuery("DELETE FROM AggregationOrgConfig")
+            .executeUpdate();
+        this.entityManager
+            .createQuery("DELETE FROM DigestSubscriptionOrgConfig")
             .executeUpdate();
 
         // Since the backend configuration is mocked, the "isRBACEnabled()"
@@ -259,6 +262,144 @@ class OrgConfigResourceTest extends DbIsolatedTest {
             .put(ORG_CONFIG_NOTIFICATION_DAILY_DIGEST_TIME_PREFERENCE_URL)
             .then()
             .statusCode(HttpStatus.SC_FORBIDDEN);
+    }
+
+    @Test
+    void testSaveAndGetDailyDigestSubscription() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"14:30\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "DAILY")
+            .then()
+            .statusCode(HttpStatus.SC_NO_CONTENT);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .get(DIGEST_SUBSCRIPTION_URL + "DAILY")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(JSON)
+            .body("scheduled_execution_time", org.hamcrest.Matchers.equalTo("14:30:00"))
+            .body("subscription_type", org.hamcrest.Matchers.equalTo("daily_email"))
+            .body("next_run", notNullValue());
+    }
+
+    @Test
+    void testSaveAndGetWeeklyDigestSubscription() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"10:00\", \"scheduled_execution_day\": \"MONDAY\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "WEEKLY")
+            .then()
+            .statusCode(HttpStatus.SC_NO_CONTENT);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .get(DIGEST_SUBSCRIPTION_URL + "WEEKLY")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(JSON)
+            .body("scheduled_execution_time", org.hamcrest.Matchers.equalTo("10:00:00"))
+            .body("scheduled_execution_day", org.hamcrest.Matchers.equalTo("MONDAY"))
+            .body("subscription_type", org.hamcrest.Matchers.equalTo("weekly_email"))
+            .body("next_run", notNullValue());
+    }
+
+    @Test
+    void testWeeklyRequiresPreferredDay() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"10:00\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "WEEKLY")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testDailyRejectsPreferredDay() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"10:00\", \"scheduled_execution_day\": \"MONDAY\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "DAILY")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testInvalidMinuteForDigestSubscription() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"10:07\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "DAILY")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testInvalidSubscriptionType() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .contentType(JSON)
+            .body("{\"scheduled_execution_time\": \"10:00\"}")
+            .put(DIGEST_SUBSCRIPTION_URL + "INSTANT")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    void testGetNonExistentDigestSubscriptionReturnsDefaults() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .get(DIGEST_SUBSCRIPTION_URL + "WEEKLY")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(JSON)
+            .body("scheduled_execution_time", org.hamcrest.Matchers.equalTo("00:00:00"))
+            .body("scheduled_execution_day", org.hamcrest.Matchers.equalTo("MONDAY"))
+            .body("subscription_type", org.hamcrest.Matchers.equalTo("weekly_email"));
+    }
+
+    @Test
+    void testGetNonExistentDailyDigestSubscriptionReturnsDefaults() {
+        when(backendConfig.isKesselEnabled(anyString())).thenReturn(false);
+
+        given()
+            .basePath(TestConstants.API_NOTIFICATIONS_V_3_0)
+            .header(identityHeader)
+            .get(DIGEST_SUBSCRIPTION_URL + "DAILY")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(JSON)
+            .body("scheduled_execution_time", org.hamcrest.Matchers.equalTo("00:00:00"))
+            .body("subscription_type", org.hamcrest.Matchers.equalTo("daily_email"));
     }
 
     private Header initRbacMock(final String username, final MockServerConfig.RbacAccess access) {
